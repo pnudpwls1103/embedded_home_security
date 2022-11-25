@@ -27,16 +27,13 @@ int sensorFlag = 0;
 int btnFlag = 0;
 void RCCInit(void)
 {	
-        /* Alternate Function IO clock enable */
-        //RCC_APB2PeriphClockCmd(RCC_APB2ENR_ADC1EN, ENABLE);
-        //RCC_AHBPeriphClockCmd(RCC_AHBENR_DMA1EN, ENABLE);
-        //RCC_APB2PeriphClockCmd(RCC_APB2ENR_AFIOEN, ENABLE);
-        
-        // 가스센서 Digital pin
-        //RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPEEN, ENABLE);
+        // 가스센서 ADC
+        RCC_APB2PeriphClockCmd(RCC_APB2ENR_ADC1EN, ENABLE);
+        RCC_AHBPeriphClockCmd(RCC_AHBENR_DMA1EN, ENABLE);
+        RCC_APB2PeriphClockCmd(RCC_APB2ENR_AFIOEN, ENABLE);
         
         // 인체감지센서 Digital pin
-        //RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPBEN, ENABLE);
+        RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPBEN, ENABLE);
         
         // 릴레이모듈 (부저)
         RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPCEN, ENABLE);
@@ -49,27 +46,32 @@ void GpioInit(void)
 {
         GPIO_InitTypeDef GPIO_InitStructure;
         
-        //GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
-        //GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-        //GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
-        //GPIO_Init(GPIOA, &GPIO_InitStructure);
+        // 가스센서 (PB5)
+        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
+        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+        GPIO_Init(GPIOA, &GPIO_InitStructure);
         
-        //GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
-        //GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-        //GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
-        //GPIO_Init(GPIOE, &GPIO_InitStructure);
+        // 인체감지센서 (PB1)
+        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
+        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
+        GPIO_Init(GPIOB, &GPIO_InitStructure);
         
-        //GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
-        //GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-        //GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
-        //GPIO_Init(GPIOB, &GPIO_InitStructure);
-
+        // 버튼 (PD11)
         GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
         GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
         GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
         GPIO_Init(GPIOD, &GPIO_InitStructure);
         
+        // 펌프 - 릴레이모듈 (PC8)
         GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+        GPIO_Init(GPIOC, &GPIO_InitStructure);
+        
+        // 블루투스 - 릴레이모듈 (PC9)
+        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
         GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
         GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
         GPIO_Init(GPIOC, &GPIO_InitStructure);
@@ -80,12 +82,12 @@ void EXTI_Configure(void)
         EXTI_InitTypeDef EXTI_InitStructure;
         
         // 인체감지센서 EXTI (PB1)
-        //GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource1);
-        //EXTI_InitStructure.EXTI_Line = EXTI_Line1;
-        //EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-        //EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
-        //EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-        //EXTI_Init(&EXTI_InitStructure);
+        GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource1);
+        EXTI_InitStructure.EXTI_Line = EXTI_Line1;
+        EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+        EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
+        EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+        EXTI_Init(&EXTI_InitStructure);
         
         // 버튼 EXTI (PD11)
         GPIO_EXTILineConfig(GPIO_PortSourceGPIOD, GPIO_PinSource11);
@@ -153,11 +155,11 @@ void NVIC_Configure(void)
         NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
         
         // 인체감지센서 NVIC
-        //NVIC_InitStructure.NVIC_IRQChannel = EXTI1_IRQn;
-        //NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
-        //NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1;
-        //NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-        //NVIC_Init(&NVIC_InitStructure);
+        NVIC_InitStructure.NVIC_IRQChannel = EXTI1_IRQn;
+        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
+        NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1;
+        NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+        NVIC_Init(&NVIC_InitStructure);
         
         // 버튼 NVIC
         NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn;
@@ -199,23 +201,37 @@ int main(void)
         RCCInit();
         GpioInit();
         EXTI_Configure();
-        //DMA_Configure();
-        //ADC_Configure();
+        DMA_Configure();
+        ADC_Configure();
         NVIC_Configure();
+        
+        GPIO_ResetBits(GPIOC, GPIO_Pin_8);
+        GPIO_ResetBits(GPIOC, GPIO_Pin_9);
         
 	LCD_Init();
 	Touch_Configuration();
 	Touch_Adjust();
 	LCD_Clear(WHITE);	       
         
-        GPIO_ResetBits(GPIOC, GPIO_Pin_8);
+        LCD_ShowString(80, 120, "Gas: ", BLACK, WHITE);
+        LCD_ShowString(80, 140, "Motion: ", BLACK, WHITE);
+        LCD_ShowString(80, 160, "Button: ", BLACK, WHITE);
         while(1) {
                 if(btnFlag)
+                {
                     GPIO_SetBits(GPIOC, GPIO_Pin_8);
+                    GPIO_SetBits(GPIOC, GPIO_Pin_9);
+                }
                 else
+                {
                     GPIO_ResetBits(GPIOC, GPIO_Pin_8);
-                LCD_ShowNum(100, 160, btnFlag, 10, BLACK, WHITE);
-                //LCD_ShowNum(100, 160, sensorFlag, 10, BLACK, WHITE);
-                //LCD_ShowNum(100, 160, ADC_Value[1], 10, BLACK, WHITE);
+                    GPIO_ResetBits(GPIOC, GPIO_Pin_9);
+                }
+                
+                LCD_ShowNum(100, 120, ADC_Value[1], 10, BLACK, WHITE);
+                LCD_ShowNum(100, 140, sensorFlag, 10, BLACK, WHITE);
+                LCD_ShowNum(100, 160, btnFlag, 10, RED, WHITE);
+                
+                
 	}
 }

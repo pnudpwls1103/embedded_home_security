@@ -1,6 +1,6 @@
 ###############################################################################
 #
-# IAR ANSI C/C++ Compiler V9.30.1.335/W64 for ARM         25/Nov/2022  15:39:34
+# IAR ANSI C/C++ Compiler V9.30.1.335/W64 for ARM         25/Nov/2022  16:15:13
 # Copyright 1999-2022 IAR Systems AB.
 #
 #    Cpu mode          =  thumb
@@ -80,359 +80,424 @@ C:\Embedded\week3\user\main.c
      29          {	
    \                     RCCInit: (+1)
    \        0x0   0xB580             PUSH     {R7,LR}
-     30                  /* Alternate Function IO clock enable */
-     31                  //RCC_APB2PeriphClockCmd(RCC_APB2ENR_ADC1EN, ENABLE);
-     32                  //RCC_AHBPeriphClockCmd(RCC_AHBENR_DMA1EN, ENABLE);
-     33                  //RCC_APB2PeriphClockCmd(RCC_APB2ENR_AFIOEN, ENABLE);
-     34                  
-     35                  // 가스센서 Digital pin
-     36                  //RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPEEN, ENABLE);
-     37                  
-     38                  // 인체감지센서 Digital pin
-     39                  //RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPBEN, ENABLE);
-     40                  
-     41                  // 릴레이모듈 (부저)
-     42                  RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPCEN, ENABLE);
+     30                  // 가스센서 ADC
+     31                  RCC_APB2PeriphClockCmd(RCC_APB2ENR_ADC1EN, ENABLE);
    \        0x2   0x2101             MOVS     R1,#+1
-   \        0x4   0x2010             MOVS     R0,#+16
-   \        0x6   0x.... 0x....      BL       RCC_APB2PeriphClockCmd
-     43                  RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPDEN, ENABLE);
-   \        0xA   0x2101             MOVS     R1,#+1
-   \        0xC   0x2020             MOVS     R0,#+32
-   \        0xE   0x.... 0x....      BL       RCC_APB2PeriphClockCmd
-     44                  RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
-   \       0x12   0x2101             MOVS     R1,#+1
-   \       0x14   0x2001             MOVS     R0,#+1
-   \       0x16   0x.... 0x....      BL       RCC_APB2PeriphClockCmd
-     45          }
-   \       0x1A   0xBD01             POP      {R0,PC}
-     46          
-     47          
+   \        0x4   0xF44F 0x7000      MOV      R0,#+512
+   \        0x8   0x.... 0x....      BL       RCC_APB2PeriphClockCmd
+     32                  RCC_AHBPeriphClockCmd(RCC_AHBENR_DMA1EN, ENABLE);
+   \        0xC   0x2101             MOVS     R1,#+1
+   \        0xE   0x2001             MOVS     R0,#+1
+   \       0x10   0x.... 0x....      BL       RCC_AHBPeriphClockCmd
+     33                  RCC_APB2PeriphClockCmd(RCC_APB2ENR_AFIOEN, ENABLE);
+   \       0x14   0x2101             MOVS     R1,#+1
+   \       0x16   0x2001             MOVS     R0,#+1
+   \       0x18   0x.... 0x....      BL       RCC_APB2PeriphClockCmd
+     34                  
+     35                  // 인체감지센서 Digital pin
+     36                  RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPBEN, ENABLE);
+   \       0x1C   0x2101             MOVS     R1,#+1
+   \       0x1E   0x2008             MOVS     R0,#+8
+   \       0x20   0x.... 0x....      BL       RCC_APB2PeriphClockCmd
+     37                  
+     38                  // 릴레이모듈 (부저)
+     39                  RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPCEN, ENABLE);
+   \       0x24   0x2101             MOVS     R1,#+1
+   \       0x26   0x2010             MOVS     R0,#+16
+   \       0x28   0x.... 0x....      BL       RCC_APB2PeriphClockCmd
+     40                  RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPDEN, ENABLE);
+   \       0x2C   0x2101             MOVS     R1,#+1
+   \       0x2E   0x2020             MOVS     R0,#+32
+   \       0x30   0x.... 0x....      BL       RCC_APB2PeriphClockCmd
+     41                  RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
+   \       0x34   0x2101             MOVS     R1,#+1
+   \       0x36   0x2001             MOVS     R0,#+1
+   \       0x38   0x.... 0x....      BL       RCC_APB2PeriphClockCmd
+     42          }
+   \       0x3C   0xBD01             POP      {R0,PC}
+     43          
+     44          
 
    \                                 In section .text, align 2, keep-with-next
-     48          void GpioInit(void)
-     49          {
+     45          void GpioInit(void)
+     46          {
    \                     GpioInit: (+1)
-   \        0x0   0xB580             PUSH     {R7,LR}
-     50                  GPIO_InitTypeDef GPIO_InitStructure;
-     51                  
-     52                  //GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
-     53                  //GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-     54                  //GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
-     55                  //GPIO_Init(GPIOA, &GPIO_InitStructure);
-     56                  
-     57                  //GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
-     58                  //GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-     59                  //GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
-     60                  //GPIO_Init(GPIOE, &GPIO_InitStructure);
-     61                  
-     62                  //GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
-     63                  //GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-     64                  //GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
-     65                  //GPIO_Init(GPIOB, &GPIO_InitStructure);
-     66          
-     67                  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
-   \        0x2   0xF44F 0x6000      MOV      R0,#+2048
-   \        0x6   0xF8AD 0x0000      STRH     R0,[SP, #+0]
-     68                  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-   \        0xA   0x2003             MOVS     R0,#+3
-   \        0xC   0xF88D 0x0002      STRB     R0,[SP, #+2]
-     69                  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-   \       0x10   0x2048             MOVS     R0,#+72
-   \       0x12   0xF88D 0x0003      STRB     R0,[SP, #+3]
-     70                  GPIO_Init(GPIOD, &GPIO_InitStructure);
-   \       0x16   0x4669             MOV      R1,SP
-   \       0x18   0x....             LDR.N    R0,??DataTable6
-   \       0x1A   0x.... 0x....      BL       GPIO_Init
-     71                  
-     72                  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
-   \       0x1E   0xF44F 0x7080      MOV      R0,#+256
-   \       0x22   0xF8AD 0x0000      STRH     R0,[SP, #+0]
-     73                  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-   \       0x26   0x2003             MOVS     R0,#+3
-   \       0x28   0xF88D 0x0002      STRB     R0,[SP, #+2]
-     74                  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-   \       0x2C   0x2010             MOVS     R0,#+16
-   \       0x2E   0xF88D 0x0003      STRB     R0,[SP, #+3]
-     75                  GPIO_Init(GPIOC, &GPIO_InitStructure);
-   \       0x32   0x4669             MOV      R1,SP
-   \       0x34   0x....             LDR.N    R0,??DataTable6_1
-   \       0x36   0x.... 0x....      BL       GPIO_Init
-     76          }
-   \       0x3A   0xBD01             POP      {R0,PC}
-     77          
+   \        0x0   0xB51C             PUSH     {R2-R4,LR}
+     47                  GPIO_InitTypeDef GPIO_InitStructure;
+     48                  
+     49                  // 가스센서 (PB5)
+     50                  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
+   \        0x2   0x2020             MOVS     R0,#+32
+   \        0x4   0xF8AD 0x0000      STRH     R0,[SP, #+0]
+     51                  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+   \        0x8   0x2003             MOVS     R0,#+3
+   \        0xA   0xF88D 0x0002      STRB     R0,[SP, #+2]
+     52                  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+   \        0xE   0x2000             MOVS     R0,#+0
+   \       0x10   0xF88D 0x0003      STRB     R0,[SP, #+3]
+     53                  GPIO_Init(GPIOA, &GPIO_InitStructure);
+   \       0x14   0x4669             MOV      R1,SP
+   \       0x16   0x....             LDR.N    R0,??DataTable6
+   \       0x18   0x.... 0x....      BL       GPIO_Init
+     54                  
+     55                  // 인체감지센서 (PB1)
+     56                  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
+   \       0x1C   0x2002             MOVS     R0,#+2
+   \       0x1E   0xF8AD 0x0000      STRH     R0,[SP, #+0]
+     57                  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+   \       0x22   0x2003             MOVS     R0,#+3
+   \       0x24   0xF88D 0x0002      STRB     R0,[SP, #+2]
+     58                  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
+   \       0x28   0x2028             MOVS     R0,#+40
+   \       0x2A   0xF88D 0x0003      STRB     R0,[SP, #+3]
+     59                  GPIO_Init(GPIOB, &GPIO_InitStructure);
+   \       0x2E   0x4669             MOV      R1,SP
+   \       0x30   0x....             LDR.N    R0,??DataTable6_1
+   \       0x32   0x.... 0x....      BL       GPIO_Init
+     60                  
+     61                  // 버튼 (PD11)
+     62                  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
+   \       0x36   0xF44F 0x6000      MOV      R0,#+2048
+   \       0x3A   0xF8AD 0x0000      STRH     R0,[SP, #+0]
+     63                  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+   \       0x3E   0x2003             MOVS     R0,#+3
+   \       0x40   0xF88D 0x0002      STRB     R0,[SP, #+2]
+     64                  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+   \       0x44   0x2048             MOVS     R0,#+72
+   \       0x46   0xF88D 0x0003      STRB     R0,[SP, #+3]
+     65                  GPIO_Init(GPIOD, &GPIO_InitStructure);
+   \       0x4A   0x4669             MOV      R1,SP
+   \       0x4C   0x....             LDR.N    R0,??DataTable6_2
+   \       0x4E   0x.... 0x....      BL       GPIO_Init
+     66                  
+     67                  // 펌프 - 릴레이모듈 (PC8)
+     68                  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+   \       0x52   0xF44F 0x7080      MOV      R0,#+256
+   \       0x56   0xF8AD 0x0000      STRH     R0,[SP, #+0]
+     69                  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+   \       0x5A   0x2003             MOVS     R0,#+3
+   \       0x5C   0xF88D 0x0002      STRB     R0,[SP, #+2]
+     70                  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+   \       0x60   0x2010             MOVS     R0,#+16
+   \       0x62   0xF88D 0x0003      STRB     R0,[SP, #+3]
+     71                  GPIO_Init(GPIOC, &GPIO_InitStructure);
+   \       0x66   0x....             LDR.N    R4,??DataTable6_3
+   \       0x68   0x4669             MOV      R1,SP
+   \       0x6A   0x0020             MOVS     R0,R4
+   \       0x6C   0x.... 0x....      BL       GPIO_Init
+     72                  
+     73                  // 블루투스 - 릴레이모듈 (PC9)
+     74                  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
+   \       0x70   0xF44F 0x7000      MOV      R0,#+512
+   \       0x74   0xF8AD 0x0000      STRH     R0,[SP, #+0]
+     75                  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+   \       0x78   0x2003             MOVS     R0,#+3
+   \       0x7A   0xF88D 0x0002      STRB     R0,[SP, #+2]
+     76                  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+   \       0x7E   0x2010             MOVS     R0,#+16
+   \       0x80   0xF88D 0x0003      STRB     R0,[SP, #+3]
+     77                  GPIO_Init(GPIOC, &GPIO_InitStructure);
+   \       0x84   0x4669             MOV      R1,SP
+   \       0x86   0x0020             MOVS     R0,R4
+   \       0x88   0x.... 0x....      BL       GPIO_Init
+     78          }
+   \       0x8C   0xBD13             POP      {R0,R1,R4,PC}
+     79          
 
    \                                 In section .text, align 2, keep-with-next
-     78          void EXTI_Configure(void)
-     79          {
+     80          void EXTI_Configure(void)
+     81          {
    \                     EXTI_Configure: (+1)
    \        0x0   0xB5E0             PUSH     {R5-R7,LR}
-     80                  EXTI_InitTypeDef EXTI_InitStructure;
-     81                  
-     82                  // 인체감지센서 EXTI (PB1)
-     83                  //GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource1);
-     84                  //EXTI_InitStructure.EXTI_Line = EXTI_Line1;
-     85                  //EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-     86                  //EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
-     87                  //EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-     88                  //EXTI_Init(&EXTI_InitStructure);
-     89                  
-     90                  // 버튼 EXTI (PD11)
-     91                  GPIO_EXTILineConfig(GPIO_PortSourceGPIOD, GPIO_PinSource11);
-   \        0x2   0x210B             MOVS     R1,#+11
-   \        0x4   0x2003             MOVS     R0,#+3
+     82                  EXTI_InitTypeDef EXTI_InitStructure;
+     83                  
+     84                  // 인체감지센서 EXTI (PB1)
+     85                  GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource1);
+   \        0x2   0x2101             MOVS     R1,#+1
+   \        0x4   0x2001             MOVS     R0,#+1
    \        0x6   0x.... 0x....      BL       GPIO_EXTILineConfig
-     92                  EXTI_InitStructure.EXTI_Line = EXTI_Line11;
-   \        0xA   0xF44F 0x6000      MOV      R0,#+2048
-   \        0xE   0x9000             STR      R0,[SP, #+0]
-     93                  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-   \       0x10   0x2000             MOVS     R0,#+0
-   \       0x12   0xF88D 0x0004      STRB     R0,[SP, #+4]
-     94                  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
-   \       0x16   0x200C             MOVS     R0,#+12
-   \       0x18   0xF88D 0x0005      STRB     R0,[SP, #+5]
-     95                  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-   \       0x1C   0x2001             MOVS     R0,#+1
-   \       0x1E   0xF88D 0x0006      STRB     R0,[SP, #+6]
-     96                  EXTI_Init(&EXTI_InitStructure);
-   \       0x22   0x4668             MOV      R0,SP
-   \       0x24   0x.... 0x....      BL       EXTI_Init
-     97          }
-   \       0x28   0xBD07             POP      {R0-R2,PC}
+     86                  EXTI_InitStructure.EXTI_Line = EXTI_Line1;
+   \        0xA   0x2002             MOVS     R0,#+2
+   \        0xC   0x9000             STR      R0,[SP, #+0]
+     87                  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+   \        0xE   0x2000             MOVS     R0,#+0
+   \       0x10   0xF88D 0x0004      STRB     R0,[SP, #+4]
+     88                  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
+   \       0x14   0x2010             MOVS     R0,#+16
+   \       0x16   0xF88D 0x0005      STRB     R0,[SP, #+5]
+     89                  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+   \       0x1A   0x2001             MOVS     R0,#+1
+   \       0x1C   0xF88D 0x0006      STRB     R0,[SP, #+6]
+     90                  EXTI_Init(&EXTI_InitStructure);
+   \       0x20   0x4668             MOV      R0,SP
+   \       0x22   0x.... 0x....      BL       EXTI_Init
+     91                  
+     92                  // 버튼 EXTI (PD11)
+     93                  GPIO_EXTILineConfig(GPIO_PortSourceGPIOD, GPIO_PinSource11);
+   \       0x26   0x210B             MOVS     R1,#+11
+   \       0x28   0x2003             MOVS     R0,#+3
+   \       0x2A   0x.... 0x....      BL       GPIO_EXTILineConfig
+     94                  EXTI_InitStructure.EXTI_Line = EXTI_Line11;
+   \       0x2E   0xF44F 0x6000      MOV      R0,#+2048
+   \       0x32   0x9000             STR      R0,[SP, #+0]
+     95                  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+   \       0x34   0x2000             MOVS     R0,#+0
+   \       0x36   0xF88D 0x0004      STRB     R0,[SP, #+4]
+     96                  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
+   \       0x3A   0x200C             MOVS     R0,#+12
+   \       0x3C   0xF88D 0x0005      STRB     R0,[SP, #+5]
+     97                  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+   \       0x40   0x2001             MOVS     R0,#+1
+   \       0x42   0xF88D 0x0006      STRB     R0,[SP, #+6]
+     98                  EXTI_Init(&EXTI_InitStructure);
+   \       0x46   0x4668             MOV      R0,SP
+   \       0x48   0x.... 0x....      BL       EXTI_Init
+     99          }
+   \       0x4C   0xBD07             POP      {R0-R2,PC}
 
    \                                 In section .text, align 2, keep-with-next
-     98          void DMA_Configure(void) {
+    100          void DMA_Configure(void) {
    \                     DMA_Configure: (+1)
    \        0x0   0xB518             PUSH     {R3,R4,LR}
    \        0x2   0xB08B             SUB      SP,SP,#+44
-     99                  DMA_InitTypeDef DMA_Instructure;
-    100                  
-    101                  DMA_Instructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
-   \        0x4   0x....             LDR.N    R0,??DataTable6_2
+    101                  DMA_InitTypeDef DMA_Instructure;
+    102                  
+    103                  DMA_Instructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
+   \        0x4   0x....             LDR.N    R0,??DataTable6_4
    \        0x6   0x9000             STR      R0,[SP, #+0]
-    102                  DMA_Instructure.DMA_MemoryBaseAddr = (uint32_t)&ADC_Value[1];
-   \        0x8   0x....             LDR.N    R0,??DataTable6_3
+    104                  DMA_Instructure.DMA_MemoryBaseAddr = (uint32_t)&ADC_Value[1];
+   \        0x8   0x....             LDR.N    R0,??DataTable6_5
    \        0xA   0x9001             STR      R0,[SP, #+4]
-    103                  DMA_Instructure.DMA_DIR = DMA_DIR_PeripheralSRC;
+    105                  DMA_Instructure.DMA_DIR = DMA_DIR_PeripheralSRC;
    \        0xC   0x2000             MOVS     R0,#+0
    \        0xE   0x9002             STR      R0,[SP, #+8]
-    104                  DMA_Instructure.DMA_BufferSize = 1;
+    106                  DMA_Instructure.DMA_BufferSize = 1;
    \       0x10   0x2001             MOVS     R0,#+1
    \       0x12   0x9003             STR      R0,[SP, #+12]
-    105                  DMA_Instructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+    107                  DMA_Instructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
    \       0x14   0x2000             MOVS     R0,#+0
    \       0x16   0x9004             STR      R0,[SP, #+16]
-    106                  DMA_Instructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+    108                  DMA_Instructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
    \       0x18   0x2080             MOVS     R0,#+128
    \       0x1A   0x9005             STR      R0,[SP, #+20]
-    107                  DMA_Instructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Word;
+    109                  DMA_Instructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Word;
    \       0x1C   0xF44F 0x7000      MOV      R0,#+512
    \       0x20   0x9006             STR      R0,[SP, #+24]
-    108                  DMA_Instructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
+    110                  DMA_Instructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
    \       0x22   0xF44F 0x6000      MOV      R0,#+2048
    \       0x26   0x9007             STR      R0,[SP, #+28]
-    109                  DMA_Instructure.DMA_Mode = DMA_Mode_Circular;
+    111                  DMA_Instructure.DMA_Mode = DMA_Mode_Circular;
    \       0x28   0x2020             MOVS     R0,#+32
    \       0x2A   0x9008             STR      R0,[SP, #+32]
-    110                  DMA_Instructure.DMA_Priority = DMA_Priority_High;
+    112                  DMA_Instructure.DMA_Priority = DMA_Priority_High;
    \       0x2C   0xF44F 0x5000      MOV      R0,#+8192
    \       0x30   0x9009             STR      R0,[SP, #+36]
-    111                  DMA_Instructure.DMA_M2M = DMA_M2M_Enable;
+    113                  DMA_Instructure.DMA_M2M = DMA_M2M_Enable;
    \       0x32   0xF44F 0x4080      MOV      R0,#+16384
    \       0x36   0x900A             STR      R0,[SP, #+40]
-    112                  
-    113                  DMA_Init(DMA1_Channel1, &DMA_Instructure);
-   \       0x38   0x....             LDR.N    R4,??DataTable6_4
+    114                  
+    115                  DMA_Init(DMA1_Channel1, &DMA_Instructure);
+   \       0x38   0x....             LDR.N    R4,??DataTable6_6
    \       0x3A   0x4669             MOV      R1,SP
    \       0x3C   0x0020             MOVS     R0,R4
    \       0x3E   0x.... 0x....      BL       DMA_Init
-    114                  DMA_Cmd(DMA1_Channel1, ENABLE);
+    116                  DMA_Cmd(DMA1_Channel1, ENABLE);
    \       0x42   0x2101             MOVS     R1,#+1
    \       0x44   0x0020             MOVS     R0,R4
    \       0x46   0x.... 0x....      BL       DMA_Cmd
-    115          
-    116          }
+    117          
+    118          }
    \       0x4A   0xB00C             ADD      SP,SP,#+48
    \       0x4C   0xBD10             POP      {R4,PC}
-    117          
+    119          
 
    \                                 In section .text, align 2, keep-with-next
-    118          void ADC_Configure(void)
-    119          {
+    120          void ADC_Configure(void)
+    121          {
    \                     ADC_Configure: (+1)
    \        0x0   0xB518             PUSH     {R3,R4,LR}
    \        0x2   0xB085             SUB      SP,SP,#+20
-    120                  ADC_InitTypeDef ADC_InitStructure;
-    121                  
-    122                  ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;
+    122                  ADC_InitTypeDef ADC_InitStructure;
+    123                  
+    124                  ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;
    \        0x4   0x2000             MOVS     R0,#+0
    \        0x6   0x9000             STR      R0,[SP, #+0]
-    123                  ADC_InitStructure.ADC_ScanConvMode = ENABLE;
+    125                  ADC_InitStructure.ADC_ScanConvMode = ENABLE;
    \        0x8   0x2001             MOVS     R0,#+1
    \        0xA   0xF88D 0x0004      STRB     R0,[SP, #+4]
-    124                  ADC_InitStructure.ADC_ContinuousConvMode = ENABLE;
+    126                  ADC_InitStructure.ADC_ContinuousConvMode = ENABLE;
    \        0xE   0x2001             MOVS     R0,#+1
    \       0x10   0xF88D 0x0005      STRB     R0,[SP, #+5]
-    125                  ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
+    127                  ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
    \       0x14   0xF45F 0x2060      MOVS     R0,#+917504
    \       0x18   0x9002             STR      R0,[SP, #+8]
-    126                  ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
+    128                  ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
    \       0x1A   0x2000             MOVS     R0,#+0
    \       0x1C   0x9003             STR      R0,[SP, #+12]
-    127                  ADC_InitStructure.ADC_NbrOfChannel = 1;
+    129                  ADC_InitStructure.ADC_NbrOfChannel = 1;
    \       0x1E   0x2001             MOVS     R0,#+1
    \       0x20   0xF88D 0x0010      STRB     R0,[SP, #+16]
-    128                
-    129                  ADC_Init(ADC1, &ADC_InitStructure);
-   \       0x24   0x....             LDR.N    R4,??DataTable6_5
+    130                
+    131                  ADC_Init(ADC1, &ADC_InitStructure);
+   \       0x24   0x....             LDR.N    R4,??DataTable6_7
    \       0x26   0x4669             MOV      R1,SP
    \       0x28   0x0020             MOVS     R0,R4
    \       0x2A   0x.... 0x....      BL       ADC_Init
-    130                  
-    131                  ADC_RegularChannelConfig(ADC1, ADC_Channel_5, 1, ADC_SampleTime_41Cycles5);
+    132                  
+    133                  ADC_RegularChannelConfig(ADC1, ADC_Channel_5, 1, ADC_SampleTime_41Cycles5);
    \       0x2E   0x2304             MOVS     R3,#+4
    \       0x30   0x2201             MOVS     R2,#+1
    \       0x32   0x2105             MOVS     R1,#+5
    \       0x34   0x0020             MOVS     R0,R4
    \       0x36   0x.... 0x....      BL       ADC_RegularChannelConfig
-    132                  
-    133                  ADC_DMACmd(ADC1, ENABLE);
+    134                  
+    135                  ADC_DMACmd(ADC1, ENABLE);
    \       0x3A   0x2101             MOVS     R1,#+1
    \       0x3C   0x0020             MOVS     R0,R4
    \       0x3E   0x.... 0x....      BL       ADC_DMACmd
-    134                  
-    135                  ADC_Cmd(ADC1, ENABLE);
+    136                  
+    137                  ADC_Cmd(ADC1, ENABLE);
    \       0x42   0x2101             MOVS     R1,#+1
    \       0x44   0x0020             MOVS     R0,R4
    \       0x46   0x.... 0x....      BL       ADC_Cmd
-    136                  
-    137                  ADC_ResetCalibration(ADC1);
+    138                  
+    139                  ADC_ResetCalibration(ADC1);
    \       0x4A   0x0020             MOVS     R0,R4
    \       0x4C   0x.... 0x....      BL       ADC_ResetCalibration
-    138                  
-    139                  while(ADC_GetResetCalibrationStatus(ADC1)) {}
+    140                  
+    141                  while(ADC_GetResetCalibrationStatus(ADC1)) {}
    \                     ??ADC_Configure_0: (+1)
    \       0x50   0x0020             MOVS     R0,R4
    \       0x52   0x.... 0x....      BL       ADC_GetResetCalibrationStatus
    \       0x56   0x2800             CMP      R0,#+0
    \       0x58   0xD1FA             BNE.N    ??ADC_Configure_0
-    140                  
-    141                  ADC_StartCalibration(ADC1);
+    142                  
+    143                  ADC_StartCalibration(ADC1);
    \       0x5A   0x0020             MOVS     R0,R4
    \       0x5C   0x.... 0x....      BL       ADC_StartCalibration
-    142                  
-    143                  while(ADC_GetCalibrationStatus(ADC1)) {}
+    144                  
+    145                  while(ADC_GetCalibrationStatus(ADC1)) {}
    \                     ??ADC_Configure_1: (+1)
    \       0x60   0x0020             MOVS     R0,R4
    \       0x62   0x.... 0x....      BL       ADC_GetCalibrationStatus
    \       0x66   0x2800             CMP      R0,#+0
    \       0x68   0xD1FA             BNE.N    ??ADC_Configure_1
-    144                  
-    145                  ADC_SoftwareStartConvCmd(ADC1, ENABLE);
+    146                  
+    147                  ADC_SoftwareStartConvCmd(ADC1, ENABLE);
    \       0x6A   0x2101             MOVS     R1,#+1
    \       0x6C   0x0020             MOVS     R0,R4
    \       0x6E   0x.... 0x....      BL       ADC_SoftwareStartConvCmd
-    146                  
-    147          }
+    148                  
+    149          }
    \       0x72   0xB006             ADD      SP,SP,#+24
    \       0x74   0xBD10             POP      {R4,PC}
-    148          
+    150          
 
    \                                 In section .text, align 2, keep-with-next
-    149          void NVIC_Configure(void)
-    150          {
+    151          void NVIC_Configure(void)
+    152          {
    \                     NVIC_Configure: (+1)
    \        0x0   0xB580             PUSH     {R7,LR}
-    151                  NVIC_InitTypeDef NVIC_InitStructure;
-    152          
-    153                  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+    153                  NVIC_InitTypeDef NVIC_InitStructure;
+    154          
+    155                  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
    \        0x2   0xF44F 0x60C0      MOV      R0,#+1536
    \        0x6   0x.... 0x....      BL       NVIC_PriorityGroupConfig
-    154                  
-    155                  // 인체감지센서 NVIC
-    156                  //NVIC_InitStructure.NVIC_IRQChannel = EXTI1_IRQn;
-    157                  //NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
-    158                  //NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1;
-    159                  //NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    160                  //NVIC_Init(&NVIC_InitStructure);
-    161                  
-    162                  // 버튼 NVIC
-    163                  NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn;
-   \        0xA   0x2028             MOVS     R0,#+40
+    156                  
+    157                  // 인체감지센서 NVIC
+    158                  NVIC_InitStructure.NVIC_IRQChannel = EXTI1_IRQn;
+   \        0xA   0x2007             MOVS     R0,#+7
    \        0xC   0xF88D 0x0000      STRB     R0,[SP, #+0]
-    164                  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
+    159                  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
    \       0x10   0x2001             MOVS     R0,#+1
    \       0x12   0xF88D 0x0001      STRB     R0,[SP, #+1]
-    165                  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1;
+    160                  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1;
    \       0x16   0x2001             MOVS     R0,#+1
    \       0x18   0xF88D 0x0002      STRB     R0,[SP, #+2]
-    166                  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    161                  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
    \       0x1C   0x2001             MOVS     R0,#+1
    \       0x1E   0xF88D 0x0003      STRB     R0,[SP, #+3]
-    167                  NVIC_Init(&NVIC_InitStructure);
+    162                  NVIC_Init(&NVIC_InitStructure);
    \       0x22   0x4668             MOV      R0,SP
    \       0x24   0x.... 0x....      BL       NVIC_Init
-    168          }
-   \       0x28   0xBD01             POP      {R0,PC}
-    169          
+    163                  
+    164                  // 버튼 NVIC
+    165                  NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn;
+   \       0x28   0x2028             MOVS     R0,#+40
+   \       0x2A   0xF88D 0x0000      STRB     R0,[SP, #+0]
+    166                  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
+   \       0x2E   0x2001             MOVS     R0,#+1
+   \       0x30   0xF88D 0x0001      STRB     R0,[SP, #+1]
+    167                  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1;
+   \       0x34   0x2001             MOVS     R0,#+1
+   \       0x36   0xF88D 0x0002      STRB     R0,[SP, #+2]
+    168                  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+   \       0x3A   0x2001             MOVS     R0,#+1
+   \       0x3C   0xF88D 0x0003      STRB     R0,[SP, #+3]
+    169                  NVIC_Init(&NVIC_InitStructure);
+   \       0x40   0x4668             MOV      R0,SP
+   \       0x42   0x.... 0x....      BL       NVIC_Init
+    170          }
+   \       0x46   0xBD01             POP      {R0,PC}
+    171          
 
    \                                 In section .text, align 2, keep-with-next
-    170          void EXTI1_IRQHandler() {
+    172          void EXTI1_IRQHandler() {
    \                     EXTI1_IRQHandler: (+1)
    \        0x0   0xB580             PUSH     {R7,LR}
-    171              if (EXTI_GetITStatus(EXTI_Line1) != RESET) {
+    173              if (EXTI_GetITStatus(EXTI_Line1) != RESET) {
    \        0x2   0x2002             MOVS     R0,#+2
    \        0x4   0x.... 0x....      BL       EXTI_GetITStatus
    \        0x8   0x2800             CMP      R0,#+0
    \        0xA   0xD00F             BEQ.N    ??EXTI1_IRQHandler_0
-    172                  if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1) == Bit_SET) {
+    174                  if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1) == Bit_SET) {
    \        0xC   0x2102             MOVS     R1,#+2
-   \        0xE   0x....             LDR.N    R0,??DataTable6_6
+   \        0xE   0x....             LDR.N    R0,??DataTable6_1
    \       0x10   0x.... 0x....      BL       GPIO_ReadInputDataBit
    \       0x14   0x2801             CMP      R0,#+1
    \       0x16   0xD103             BNE.N    ??EXTI1_IRQHandler_1
-    173                      sensorFlag = 1;
+    175                      sensorFlag = 1;
    \       0x18   0x2001             MOVS     R0,#+1
-   \       0x1A   0x....             LDR.N    R1,??DataTable6_7
+   \       0x1A   0x....             LDR.N    R1,??DataTable6_8
    \       0x1C   0x6008             STR      R0,[R1, #+0]
    \       0x1E   0xE002             B.N      ??EXTI1_IRQHandler_2
-    174                  }
-    175                  else {
-    176                      sensorFlag = 0;
+    176                  }
+    177                  else {
+    178                      sensorFlag = 0;
    \                     ??EXTI1_IRQHandler_1: (+1)
    \       0x20   0x2000             MOVS     R0,#+0
-   \       0x22   0x....             LDR.N    R1,??DataTable6_7
+   \       0x22   0x....             LDR.N    R1,??DataTable6_8
    \       0x24   0x6008             STR      R0,[R1, #+0]
-    177                  }
-    178                  EXTI_ClearITPendingBit(EXTI_Line1);
+    179                  }
+    180                  EXTI_ClearITPendingBit(EXTI_Line1);
    \                     ??EXTI1_IRQHandler_2: (+1)
    \       0x26   0x2002             MOVS     R0,#+2
    \       0x28   0x.... 0x....      BL       EXTI_ClearITPendingBit
-    179              }
-    180          
-    181          
-    182          }
+    181              }
+    182          
+    183          
+    184          }
    \                     ??EXTI1_IRQHandler_0: (+1)
    \       0x2C   0xBD01             POP      {R0,PC}
-    183          
+    185          
 
    \                                 In section .text, align 2, keep-with-next
-    184          void EXTI15_10_IRQHandler() {
+    186          void EXTI15_10_IRQHandler() {
    \                     EXTI15_10_IRQHandler: (+1)
    \        0x0   0xB580             PUSH     {R7,LR}
-    185              if (EXTI_GetITStatus(EXTI_Line11) != RESET) {
+    187              if (EXTI_GetITStatus(EXTI_Line11) != RESET) {
    \        0x2   0xF44F 0x6000      MOV      R0,#+2048
    \        0x6   0x.... 0x....      BL       EXTI_GetITStatus
    \        0xA   0x2800             CMP      R0,#+0
    \        0xC   0xD013             BEQ.N    ??EXTI15_10_IRQHandler_0
-    186                  if (GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_11) == Bit_RESET) {
+    188                  if (GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_11) == Bit_RESET) {
    \        0xE   0xF44F 0x6100      MOV      R1,#+2048
-   \       0x12   0x....             LDR.N    R0,??DataTable6
+   \       0x12   0x....             LDR.N    R0,??DataTable6_2
    \       0x14   0x.... 0x....      BL       GPIO_ReadInputDataBit
    \       0x18   0x2800             CMP      R0,#+0
    \       0x1A   0xD108             BNE.N    ??EXTI15_10_IRQHandler_1
-    187                      btnFlag = (btnFlag == 0) ? 1 : 0;
-   \       0x1C   0x....             LDR.N    R1,??DataTable6_8
+    189                      btnFlag = (btnFlag == 0) ? 1 : 0;
+   \       0x1C   0x....             LDR.N    R1,??DataTable6_9
    \       0x1E   0x6808             LDR      R0,[R1, #+0]
    \       0x20   0x2800             CMP      R0,#+0
    \       0x22   0xD102             BNE.N    ??EXTI15_10_IRQHandler_2
@@ -442,125 +507,246 @@ C:\Embedded\week3\user\main.c
    \                     ??EXTI15_10_IRQHandler_2: (+1)
    \       0x2A   0x2000             MOVS     R0,#+0
    \       0x2C   0x6008             STR      R0,[R1, #+0]
-    188                  }
-    189          
-    190                  EXTI_ClearITPendingBit(EXTI_Line11);
+    190                  }
+    191          
+    192                  EXTI_ClearITPendingBit(EXTI_Line11);
    \                     ??EXTI15_10_IRQHandler_1: (+1)
    \       0x2E   0xF44F 0x6000      MOV      R0,#+2048
    \       0x32   0x.... 0x....      BL       EXTI_ClearITPendingBit
-    191              }
-    192          
-    193          
-    194          }
+    193              }
+    194          
+    195          
+    196          }
    \                     ??EXTI15_10_IRQHandler_0: (+1)
    \       0x36   0xBD01             POP      {R0,PC}
-    195          
+    197          
 
    \                                 In section .text, align 2, keep-with-next
-    196          int main(void)
-    197          {
+    198          int main(void)
+    199          {
    \                     main: (+1)
    \        0x0   0xB57C             PUSH     {R2-R6,LR}
-    198            	SystemInit();
+    200            	SystemInit();
    \        0x2   0x.... 0x....      BL       SystemInit
-    199                  RCCInit();
+    201                  RCCInit();
    \        0x6   0x.... 0x....      BL       RCCInit
-    200                  GpioInit();
+    202                  GpioInit();
    \        0xA   0x.... 0x....      BL       GpioInit
-    201                  EXTI_Configure();
+    203                  EXTI_Configure();
    \        0xE   0x.... 0x....      BL       EXTI_Configure
-    202                  //DMA_Configure();
-    203                  //ADC_Configure();
-    204                  NVIC_Configure();
-   \       0x12   0x.... 0x....      BL       NVIC_Configure
-    205                  
-    206          	LCD_Init();
-   \       0x16   0x.... 0x....      BL       LCD_Init
-    207          	Touch_Configuration();
-   \       0x1A   0x.... 0x....      BL       Touch_Configuration
-    208          	Touch_Adjust();
-   \       0x1E   0x.... 0x....      BL       Touch_Adjust
-    209          	LCD_Clear(WHITE);	       
-   \       0x22   0xF64F 0x74FF      MOVW     R4,#+65535
-   \       0x26   0x0020             MOVS     R0,R4
-   \       0x28   0x.... 0x....      BL       LCD_Clear
+    204                  DMA_Configure();
+   \       0x12   0x.... 0x....      BL       DMA_Configure
+    205                  ADC_Configure();
+   \       0x16   0x.... 0x....      BL       ADC_Configure
+    206                  NVIC_Configure();
+   \       0x1A   0x.... 0x....      BL       NVIC_Configure
+    207                  
+    208                  GPIO_ResetBits(GPIOC, GPIO_Pin_8);
+   \       0x1E   0x....             LDR.N    R4,??DataTable6_3
+   \       0x20   0xF44F 0x7180      MOV      R1,#+256
+   \       0x24   0x0020             MOVS     R0,R4
+   \       0x26   0x.... 0x....      BL       GPIO_ResetBits
+    209                  GPIO_ResetBits(GPIOC, GPIO_Pin_9);
+   \       0x2A   0xF44F 0x7100      MOV      R1,#+512
+   \       0x2E   0x0020             MOVS     R0,R4
+   \       0x30   0x.... 0x....      BL       GPIO_ResetBits
     210                  
-    211                  GPIO_ResetBits(GPIOC, GPIO_Pin_8);
-   \       0x2C   0x....             LDR.N    R5,??DataTable6_1
-   \       0x2E   0xF44F 0x7180      MOV      R1,#+256
-   \       0x32   0x0028             MOVS     R0,R5
-   \       0x34   0x.... 0x....      BL       GPIO_ResetBits
-   \       0x38   0xE005             B.N      ??main_0
-    212                  while(1) {
-    213                          if(btnFlag)
-    214                              GPIO_SetBits(GPIOC, GPIO_Pin_8);
-    215                          else
-    216                              GPIO_ResetBits(GPIOC, GPIO_Pin_8);
+    211          	LCD_Init();
+   \       0x34   0x.... 0x....      BL       LCD_Init
+    212          	Touch_Configuration();
+   \       0x38   0x.... 0x....      BL       Touch_Configuration
+    213          	Touch_Adjust();
+   \       0x3C   0x.... 0x....      BL       Touch_Adjust
+    214          	LCD_Clear(WHITE);	       
+   \       0x40   0xF64F 0x75FF      MOVW     R5,#+65535
+   \       0x44   0x0028             MOVS     R0,R5
+   \       0x46   0x.... 0x....      BL       LCD_Clear
+    215                  
+    216                  LCD_ShowString(80, 120, "Gas: ", BLACK, WHITE);
+   \       0x4A   0x0028             MOVS     R0,R5
+   \       0x4C   0x9000             STR      R0,[SP, #+0]
+   \       0x4E   0x2300             MOVS     R3,#+0
+   \       0x50   0x....             LDR.N    R2,??DataTable6_10
+   \       0x52   0x2178             MOVS     R1,#+120
+   \       0x54   0x2050             MOVS     R0,#+80
+   \       0x56   0x.... 0x....      BL       LCD_ShowString
+    217                  LCD_ShowString(80, 140, "Motion: ", BLACK, WHITE);
+   \       0x5A   0x0028             MOVS     R0,R5
+   \       0x5C   0x9000             STR      R0,[SP, #+0]
+   \       0x5E   0x2300             MOVS     R3,#+0
+   \       0x60   0x....             LDR.N    R2,??DataTable6_11
+   \       0x62   0x218C             MOVS     R1,#+140
+   \       0x64   0x2050             MOVS     R0,#+80
+   \       0x66   0x.... 0x....      BL       LCD_ShowString
+    218                  LCD_ShowString(80, 160, "Button: ", BLACK, WHITE);
+   \       0x6A   0x0028             MOVS     R0,R5
+   \       0x6C   0x9000             STR      R0,[SP, #+0]
+   \       0x6E   0x2300             MOVS     R3,#+0
+   \       0x70   0x....             LDR.N    R2,??DataTable6_12
+   \       0x72   0x21A0             MOVS     R1,#+160
+   \       0x74   0x2050             MOVS     R0,#+80
+   \       0x76   0x.... 0x....      BL       LCD_ShowString
+   \       0x7A   0xE00A             B.N      ??main_0
+    219                  while(1) {
+    220                          if(btnFlag)
+    221                          {
+    222                              GPIO_SetBits(GPIOC, GPIO_Pin_8);
+    223                              GPIO_SetBits(GPIOC, GPIO_Pin_9);
+    224                          }
+    225                          else
+    226                          {
+    227                              GPIO_ResetBits(GPIOC, GPIO_Pin_8);
    \                     ??main_1: (+1)
-   \       0x3A   0xF44F 0x7180      MOV      R1,#+256
-   \       0x3E   0x0028             MOVS     R0,R5
-   \       0x40   0x.... 0x....      BL       GPIO_ResetBits
-   \       0x44   0xE008             B.N      ??main_2
+   \       0x7C   0xF44F 0x7180      MOV      R1,#+256
+   \       0x80   0x0020             MOVS     R0,R4
+   \       0x82   0x.... 0x....      BL       GPIO_ResetBits
+    228                              GPIO_ResetBits(GPIOC, GPIO_Pin_9);
+   \       0x86   0xF44F 0x7100      MOV      R1,#+512
+   \       0x8A   0x0020             MOVS     R0,R4
+   \       0x8C   0x.... 0x....      BL       GPIO_ResetBits
+   \       0x90   0xE00D             B.N      ??main_2
+    229                          }
    \                     ??main_0: (+1)
-   \       0x46   0x....             LDR.N    R6,??DataTable6_8
-   \       0x48   0x6830             LDR      R0,[R6, #+0]
-   \       0x4A   0x2800             CMP      R0,#+0
-   \       0x4C   0xD0F5             BEQ.N    ??main_1
-   \       0x4E   0xF44F 0x7180      MOV      R1,#+256
-   \       0x52   0x0028             MOVS     R0,R5
-   \       0x54   0x.... 0x....      BL       GPIO_SetBits
-    217                          LCD_ShowNum(100, 160, btnFlag, 10, BLACK, WHITE);
+   \       0x92   0x....             LDR.N    R6,??DataTable6_9
+   \       0x94   0x6830             LDR      R0,[R6, #+0]
+   \       0x96   0x2800             CMP      R0,#+0
+   \       0x98   0xD0F0             BEQ.N    ??main_1
+   \       0x9A   0xF44F 0x7180      MOV      R1,#+256
+   \       0x9E   0x0020             MOVS     R0,R4
+   \       0xA0   0x.... 0x....      BL       GPIO_SetBits
+   \       0xA4   0xF44F 0x7100      MOV      R1,#+512
+   \       0xA8   0x0020             MOVS     R0,R4
+   \       0xAA   0x.... 0x....      BL       GPIO_SetBits
+    230                          
+    231                          LCD_ShowNum(100, 120, ADC_Value[1], 10, BLACK, WHITE);
    \                     ??main_2: (+1)
-   \       0x58   0x0020             MOVS     R0,R4
-   \       0x5A   0x9001             STR      R0,[SP, #+4]
-   \       0x5C   0x2000             MOVS     R0,#+0
-   \       0x5E   0x9000             STR      R0,[SP, #+0]
-   \       0x60   0x230A             MOVS     R3,#+10
-   \       0x62   0x6832             LDR      R2,[R6, #+0]
-   \       0x64   0x21A0             MOVS     R1,#+160
-   \       0x66   0x2064             MOVS     R0,#+100
-   \       0x68   0x.... 0x....      BL       LCD_ShowNum
-   \       0x6C   0xE7EB             B.N      ??main_0
-    218                          //LCD_ShowNum(100, 160, sensorFlag, 10, BLACK, WHITE);
-    219                          //LCD_ShowNum(100, 160, ADC_Value[1], 10, BLACK, WHITE);
-    220          	}
-    221          }
+   \       0xAE   0x0028             MOVS     R0,R5
+   \       0xB0   0x9001             STR      R0,[SP, #+4]
+   \       0xB2   0x2000             MOVS     R0,#+0
+   \       0xB4   0x9000             STR      R0,[SP, #+0]
+   \       0xB6   0x230A             MOVS     R3,#+10
+   \       0xB8   0x....             LDR.N    R0,??DataTable6_13
+   \       0xBA   0x6842             LDR      R2,[R0, #+4]
+   \       0xBC   0x2178             MOVS     R1,#+120
+   \       0xBE   0x2064             MOVS     R0,#+100
+   \       0xC0   0x.... 0x....      BL       LCD_ShowNum
+    232                          LCD_ShowNum(100, 140, sensorFlag, 10, BLACK, WHITE);
+   \       0xC4   0x0028             MOVS     R0,R5
+   \       0xC6   0x9001             STR      R0,[SP, #+4]
+   \       0xC8   0x2000             MOVS     R0,#+0
+   \       0xCA   0x9000             STR      R0,[SP, #+0]
+   \       0xCC   0x230A             MOVS     R3,#+10
+   \       0xCE   0x....             LDR.N    R0,??DataTable6_8
+   \       0xD0   0x6802             LDR      R2,[R0, #+0]
+   \       0xD2   0x218C             MOVS     R1,#+140
+   \       0xD4   0x2064             MOVS     R0,#+100
+   \       0xD6   0x.... 0x....      BL       LCD_ShowNum
+    233                          LCD_ShowNum(100, 160, btnFlag, 10, RED, WHITE);
+   \       0xDA   0x0028             MOVS     R0,R5
+   \       0xDC   0x9001             STR      R0,[SP, #+4]
+   \       0xDE   0xF44F 0x4078      MOV      R0,#+63488
+   \       0xE2   0x9000             STR      R0,[SP, #+0]
+   \       0xE4   0x230A             MOVS     R3,#+10
+   \       0xE6   0x6832             LDR      R2,[R6, #+0]
+   \       0xE8   0x21A0             MOVS     R1,#+160
+   \       0xEA   0x2064             MOVS     R0,#+100
+   \       0xEC   0x.... 0x....      BL       LCD_ShowNum
+   \       0xF0   0xE7CF             B.N      ??main_0
+    234                          
+    235                          
+    236          	}
+    237          }
 
    \                                 In section .text, align 4, keep-with-next
    \                     ??DataTable6:
-   \        0x0   0x4001'1400        DC32     0x40011400
+   \        0x0   0x4001'0800        DC32     0x40010800
 
    \                                 In section .text, align 4, keep-with-next
    \                     ??DataTable6_1:
-   \        0x0   0x4001'1000        DC32     0x40011000
-
-   \                                 In section .text, align 4, keep-with-next
-   \                     ??DataTable6_2:
-   \        0x0   0x4001'244C        DC32     0x4001244c
-
-   \                                 In section .text, align 4, keep-with-next
-   \                     ??DataTable6_3:
-   \        0x0   0x....'....        DC32     ADC_Value+0x4
-
-   \                                 In section .text, align 4, keep-with-next
-   \                     ??DataTable6_4:
-   \        0x0   0x4002'0008        DC32     0x40020008
-
-   \                                 In section .text, align 4, keep-with-next
-   \                     ??DataTable6_5:
-   \        0x0   0x4001'2400        DC32     0x40012400
-
-   \                                 In section .text, align 4, keep-with-next
-   \                     ??DataTable6_6:
    \        0x0   0x4001'0C00        DC32     0x40010c00
 
    \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable6_2:
+   \        0x0   0x4001'1400        DC32     0x40011400
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable6_3:
+   \        0x0   0x4001'1000        DC32     0x40011000
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable6_4:
+   \        0x0   0x4001'244C        DC32     0x4001244c
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable6_5:
+   \        0x0   0x....'....        DC32     ADC_Value+0x4
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable6_6:
+   \        0x0   0x4002'0008        DC32     0x40020008
+
+   \                                 In section .text, align 4, keep-with-next
    \                     ??DataTable6_7:
-   \        0x0   0x....'....        DC32     sensorFlag
+   \        0x0   0x4001'2400        DC32     0x40012400
 
    \                                 In section .text, align 4, keep-with-next
    \                     ??DataTable6_8:
+   \        0x0   0x....'....        DC32     sensorFlag
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable6_9:
    \        0x0   0x....'....        DC32     btnFlag
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable6_10:
+   \        0x0   0x....'....        DC32     ?_0
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable6_11:
+   \        0x0   0x....'....        DC32     ?_1
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable6_12:
+   \        0x0   0x....'....        DC32     ?_2
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable6_13:
+   \        0x0   0x....'....        DC32     ADC_Value
+
+   \                                 In section .rodata, align 4
+   \                     ?_0:
+   \        0x0   0x47 0x61          DC8 "Gas: "
+
+   \              0x73 0x3A    
+
+   \              0x20 0x00
+   \        0x6                      DS8 2
+
+   \                                 In section .rodata, align 4
+   \                     ?_1:
+   \        0x0   0x4D 0x6F          DC8 "Motion: "
+
+   \              0x74 0x69    
+
+   \              0x6F 0x6E    
+
+   \              0x3A 0x20    
+
+   \              0x00
+   \        0x9                      DS8 3
+
+   \                                 In section .rodata, align 4
+   \                     ?_2:
+   \        0x0   0x42 0x75          DC8 "Button: "
+
+   \              0x74 0x74    
+
+   \              0x6F 0x6E    
+
+   \              0x3A 0x20    
+
+   \              0x00
+   \        0x9                      DS8 3
 
    Maximum stack usage in bytes:
 
@@ -590,14 +776,17 @@ C:\Embedded\week3\user\main.c
       16   EXTI_Configure
         16   -> EXTI_Init
         16   -> GPIO_EXTILineConfig
-       8   GpioInit
-         8   -> GPIO_Init
+      16   GpioInit
+        16   -> GPIO_Init
        8   NVIC_Configure
          8   -> NVIC_Init
          8   -> NVIC_PriorityGroupConfig
        8   RCCInit
+         8   -> RCC_AHBPeriphClockCmd
          8   -> RCC_APB2PeriphClockCmd
       24   main
+        24   -> ADC_Configure
+        24   -> DMA_Configure
         24   -> EXTI_Configure
         24   -> GPIO_ResetBits
         24   -> GPIO_SetBits
@@ -605,6 +794,7 @@ C:\Embedded\week3\user\main.c
         24   -> LCD_Clear
         24   -> LCD_Init
         24   -> LCD_ShowNum
+        24   -> LCD_ShowString
         24   -> NVIC_Configure
         24   -> RCCInit
         24   -> SystemInit
@@ -618,6 +808,10 @@ C:\Embedded\week3\user\main.c
    -----  --------------
        4  ??DataTable6
        4  ??DataTable6_1
+       4  ??DataTable6_10
+       4  ??DataTable6_11
+       4  ??DataTable6_12
+       4  ??DataTable6_13
        4  ??DataTable6_2
        4  ??DataTable6_3
        4  ??DataTable6_4
@@ -625,25 +819,31 @@ C:\Embedded\week3\user\main.c
        4  ??DataTable6_6
        4  ??DataTable6_7
        4  ??DataTable6_8
+       4  ??DataTable6_9
+       8  ?_0
+      12  ?_1
+      12  ?_2
      118  ADC_Configure
        8  ADC_Value
       78  DMA_Configure
       56  EXTI15_10_IRQHandler
       46  EXTI1_IRQHandler
-      42  EXTI_Configure
-      60  GpioInit
-      42  NVIC_Configure
-      28  RCCInit
+      78  EXTI_Configure
+     142  GpioInit
+      72  NVIC_Configure
+      62  RCCInit
        4  btnFlag
-     110  main
+     242  main
        4  sensorFlag
 
  
   16 bytes in section .bss
- 616 bytes in section .text
+  32 bytes in section .rodata
+ 950 bytes in section .text
  
- 616 bytes of CODE memory
-  16 bytes of DATA memory
+ 950 bytes of CODE  memory
+  32 bytes of CONST memory
+  16 bytes of DATA  memory
 
 Errors: none
 Warnings: none
