@@ -1,0 +1,39 @@
+C:\Embedded\week3\Debug\BrowseInfo\Libraries\STM32F10x_StdPeriph_Driver_v3.5\src\stm32f10x_crc.pbi: \
+  C:\Embedded\week3\Libraries\STM32F10x_StdPeriph_Driver_v3.5\src\stm32f10x_crc.c \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_crc.h \
+  C:\Embedded\week3\libraries\CMSIS\DeviceSupport\stm32f10x.h \
+  C:\Program\ Files\IAR\ Systems\Embedded\ Workbench\ 9.1\arm\CMSIS\Core\Include\core_cm3.h \
+  C:\Program\ Files\IAR\ Systems\Embedded\ Workbench\ 9.1\arm\inc\c\stdint.h \
+  C:\Program\ Files\IAR\ Systems\Embedded\ Workbench\ 9.1\arm\inc\c\ycheck.h \
+  C:\Program\ Files\IAR\ Systems\Embedded\ Workbench\ 9.1\arm\inc\c\yvals.h \
+  C:\Program\ Files\IAR\ Systems\Embedded\ Workbench\ 9.1\arm\inc\c\DLib_Defaults.h \
+  C:\Program\ Files\IAR\ Systems\Embedded\ Workbench\ 9.1\arm\inc\c\DLib_Config_Normal.h \
+  C:\Program\ Files\IAR\ Systems\Embedded\ Workbench\ 9.1\arm\inc\c\DLib_Product.h \
+  C:\Program\ Files\IAR\ Systems\Embedded\ Workbench\ 9.1\arm\CMSIS\Core\Include\cmsis_version.h \
+  C:\Program\ Files\IAR\ Systems\Embedded\ Workbench\ 9.1\arm\CMSIS\Core\Include\cmsis_compiler.h \
+  C:\Program\ Files\IAR\ Systems\Embedded\ Workbench\ 9.1\arm\CMSIS\Core\Include\cmsis_iccarm.h \
+  C:\Program\ Files\IAR\ Systems\Embedded\ Workbench\ 9.1\arm\inc\c\aarch32\iccarm_builtin.h \
+  C:\Embedded\week3\libraries\CMSIS\DeviceSupport\system_stm32f10x.h \
+  C:\Embedded\week3\user\inc\stm32f10x_conf.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_adc.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_bkp.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_can.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_cec.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_dac.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_dbgmcu.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_dma.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_exti.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_flash.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_fsmc.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_gpio.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_i2c.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_iwdg.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_pwr.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_rcc.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_rtc.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_sdio.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_spi.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_tim.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_usart.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\stm32f10x_wwdg.h \
+  C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\misc.h

@@ -1,0 +1,517 @@
+###############################################################################
+#
+# IAR ANSI C/C++ Compiler V9.30.1.335/W64 for ARM         25/Nov/2022  15:04:57
+# Copyright 1999-2022 IAR Systems AB.
+#
+#    Cpu mode          =  thumb
+#    Endian            =  little
+#    Source file       =  C:\Embedded\week3\user\main.c
+#    Command line      =
+#        -f C:\Embedded\week3\Debug\Obj\user\main.o.rsp
+#        (C:\Embedded\week3\user\main.c -D USE_STDPERIPH_DRIVER -D STM32F10X_CL
+#        -lC C:\Embedded\week3\Debug\List\user -o
+#        C:\Embedded\week3\Debug\Obj\user --no_cse --no_unroll --no_inline
+#        --no_code_motion --no_tbaa --no_clustering --no_scheduling --debug
+#        --endian=little --cpu=Cortex-M3 -e --fpu=None --dlib_config
+#        "C:\Program Files\IAR Systems\Embedded Workbench
+#        9.1\arm\inc\c\DLib_Config_Normal.h" -I
+#        C:\Embedded\week3\libraries\CMSIS\DeviceSupport\ -I
+#        C:\Embedded\week3\libraries\CMSIS\DeviceSupport\Startup\ -I
+#        C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\inc\ -I
+#        C:\Embedded\week3\libraries\STM32F10x_StdPeriph_Driver_v3.5\src\ -I
+#        C:\Embedded\week3\user\ -I C:\Embedded\week3\libraries\LCD\ -I
+#        C:\Embedded\week3\user\inc\ -Ol -I "C:\Program Files\IAR
+#        Systems\Embedded Workbench 9.1\arm\CMSIS\Core\Include\\")
+#        --dependencies=n C:\Embedded\week3\Debug\Obj\user\main.o.d
+#    Locale            =  C
+#    List file         =  C:\Embedded\week3\Debug\List\user\main.lst
+#    Object file       =  C:\Embedded\week3\Debug\Obj\user\main.o
+#    Runtime model:       
+#      __CPP_Runtime   =  1
+#      __SystemLibrary =  DLib
+#      __dlib_version  =  6
+#      __size_limit    =  32768|ARM.EW.LINKER
+#
+###############################################################################
+
+C:\Embedded\week3\user\main.c
+      1          #include "stm32f10x.h"
+      2          #include "core_cm3.h"
+      3          #include "misc.h"
+      4          #include "stm32f10x_gpio.h"
+      5          #include "stm32f10x_rcc.h"
+      6          #include "stm32f10x_usart.h"
+      7          #include "stm32f10x_adc.h"
+      8          #include "lcd.h"
+      9          #include "touch.h"
+     10          
+     11          // volatile unsigned 32bits
+
+   \                                 In section .bss, align 4
+     12          volatile uint32_t ADC_Value[2];
+   \                     ADC_Value:
+   \        0x0                      DS8 8
+     13          
+     14          /* function prototype */
+     15          void RCCInit(void);
+     16          void GpioInit(void);
+     17          void EXTI_Configure(void);
+     18          void DMA_Configure(void);
+     19          void ADC_Configure(void);
+     20          void NVIC_Configure(void);
+     21          
+     22          void EXTI1_IRQHandler(void);
+     23          void Delay(void);
+     24          
+
+   \                                 In section .bss, align 4
+     25          int sensorFlag = 0;
+   \                     sensorFlag:
+   \        0x0                      DS8 4
+
+   \                                 In section .text, align 2, keep-with-next
+     26          void RCCInit(void)
+     27          {	
+   \                     RCCInit: (+1)
+   \        0x0   0xB580             PUSH     {R7,LR}
+     28                  /* Alternate Function IO clock enable */
+     29                  //RCC_APB2PeriphClockCmd(RCC_APB2ENR_ADC1EN, ENABLE);
+     30                  //RCC_AHBPeriphClockCmd(RCC_AHBENR_DMA1EN, ENABLE);
+     31                  //RCC_APB2PeriphClockCmd(RCC_APB2ENR_AFIOEN, ENABLE);
+     32                  
+     33                  // 가스센서 Digital pin
+     34                  //RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPEEN, ENABLE);
+     35                  
+     36                  // 인체감지센서 Digital pin
+     37                  RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPBEN, ENABLE);
+   \        0x2   0x2101             MOVS     R1,#+1
+   \        0x4   0x2008             MOVS     R0,#+8
+   \        0x6   0x.... 0x....      BL       RCC_APB2PeriphClockCmd
+     38                  
+     39                  //RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPCEN, ENABLE);
+     40                  //RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPDEN, ENABLE);
+     41                  RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
+   \        0xA   0x2101             MOVS     R1,#+1
+   \        0xC   0x2001             MOVS     R0,#+1
+   \        0xE   0x.... 0x....      BL       RCC_APB2PeriphClockCmd
+     42          }
+   \       0x12   0xBD01             POP      {R0,PC}
+     43          
+     44          
+
+   \                                 In section .text, align 2, keep-with-next
+     45          void GpioInit(void)
+     46          {
+   \                     GpioInit: (+1)
+   \        0x0   0xB580             PUSH     {R7,LR}
+     47                  GPIO_InitTypeDef GPIO_InitStructure;
+     48                  
+     49                  //GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
+     50                  //GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+     51                  //GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+     52                  //GPIO_Init(GPIOA, &GPIO_InitStructure);
+     53                  
+     54                  //GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
+     55                  //GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+     56                  //GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+     57                  //GPIO_Init(GPIOE, &GPIO_InitStructure);
+     58                  
+     59                  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
+   \        0x2   0x2002             MOVS     R0,#+2
+   \        0x4   0xF8AD 0x0000      STRH     R0,[SP, #+0]
+     60                  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+   \        0x8   0x2003             MOVS     R0,#+3
+   \        0xA   0xF88D 0x0002      STRB     R0,[SP, #+2]
+     61                  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
+   \        0xE   0x2028             MOVS     R0,#+40
+   \       0x10   0xF88D 0x0003      STRB     R0,[SP, #+3]
+     62                  GPIO_Init(GPIOB, &GPIO_InitStructure);
+   \       0x14   0x4669             MOV      R1,SP
+   \       0x16   0x....             LDR.N    R0,??DataTable5
+   \       0x18   0x.... 0x....      BL       GPIO_Init
+     63          }
+   \       0x1C   0xBD01             POP      {R0,PC}
+     64          
+
+   \                                 In section .text, align 2, keep-with-next
+     65          void EXTI_Configure(void)
+     66          {
+   \                     EXTI_Configure: (+1)
+   \        0x0   0xB5E0             PUSH     {R5-R7,LR}
+     67                  EXTI_InitTypeDef EXTI_InitStructure;
+     68          
+     69                  GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource1);
+   \        0x2   0x2101             MOVS     R1,#+1
+   \        0x4   0x2001             MOVS     R0,#+1
+   \        0x6   0x.... 0x....      BL       GPIO_EXTILineConfig
+     70                  EXTI_InitStructure.EXTI_Line = EXTI_Line1;
+   \        0xA   0x2002             MOVS     R0,#+2
+   \        0xC   0x9000             STR      R0,[SP, #+0]
+     71                  EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+   \        0xE   0x2000             MOVS     R0,#+0
+   \       0x10   0xF88D 0x0004      STRB     R0,[SP, #+4]
+     72                  EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
+   \       0x14   0x2010             MOVS     R0,#+16
+   \       0x16   0xF88D 0x0005      STRB     R0,[SP, #+5]
+     73                  EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+   \       0x1A   0x2001             MOVS     R0,#+1
+   \       0x1C   0xF88D 0x0006      STRB     R0,[SP, #+6]
+     74                  EXTI_Init(&EXTI_InitStructure);
+   \       0x20   0x4668             MOV      R0,SP
+   \       0x22   0x.... 0x....      BL       EXTI_Init
+     75          }
+   \       0x26   0xBD07             POP      {R0-R2,PC}
+
+   \                                 In section .text, align 2, keep-with-next
+     76          void DMA_Configure(void) {
+   \                     DMA_Configure: (+1)
+   \        0x0   0xB518             PUSH     {R3,R4,LR}
+   \        0x2   0xB08B             SUB      SP,SP,#+44
+     77                  DMA_InitTypeDef DMA_Instructure;
+     78                  
+     79                  DMA_Instructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
+   \        0x4   0x....             LDR.N    R0,??DataTable5_1
+   \        0x6   0x9000             STR      R0,[SP, #+0]
+     80                  DMA_Instructure.DMA_MemoryBaseAddr = (uint32_t)&ADC_Value[1];
+   \        0x8   0x....             LDR.N    R0,??DataTable5_2
+   \        0xA   0x9001             STR      R0,[SP, #+4]
+     81                  DMA_Instructure.DMA_DIR = DMA_DIR_PeripheralSRC;
+   \        0xC   0x2000             MOVS     R0,#+0
+   \        0xE   0x9002             STR      R0,[SP, #+8]
+     82                  DMA_Instructure.DMA_BufferSize = 1;
+   \       0x10   0x2001             MOVS     R0,#+1
+   \       0x12   0x9003             STR      R0,[SP, #+12]
+     83                  DMA_Instructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+   \       0x14   0x2000             MOVS     R0,#+0
+   \       0x16   0x9004             STR      R0,[SP, #+16]
+     84                  DMA_Instructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+   \       0x18   0x2080             MOVS     R0,#+128
+   \       0x1A   0x9005             STR      R0,[SP, #+20]
+     85                  DMA_Instructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Word;
+   \       0x1C   0xF44F 0x7000      MOV      R0,#+512
+   \       0x20   0x9006             STR      R0,[SP, #+24]
+     86                  DMA_Instructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
+   \       0x22   0xF44F 0x6000      MOV      R0,#+2048
+   \       0x26   0x9007             STR      R0,[SP, #+28]
+     87                  DMA_Instructure.DMA_Mode = DMA_Mode_Circular;
+   \       0x28   0x2020             MOVS     R0,#+32
+   \       0x2A   0x9008             STR      R0,[SP, #+32]
+     88                  DMA_Instructure.DMA_Priority = DMA_Priority_High;
+   \       0x2C   0xF44F 0x5000      MOV      R0,#+8192
+   \       0x30   0x9009             STR      R0,[SP, #+36]
+     89                  DMA_Instructure.DMA_M2M = DMA_M2M_Enable;
+   \       0x32   0xF44F 0x4080      MOV      R0,#+16384
+   \       0x36   0x900A             STR      R0,[SP, #+40]
+     90                  
+     91                  DMA_Init(DMA1_Channel1, &DMA_Instructure);
+   \       0x38   0x....             LDR.N    R4,??DataTable5_3
+   \       0x3A   0x4669             MOV      R1,SP
+   \       0x3C   0x0020             MOVS     R0,R4
+   \       0x3E   0x.... 0x....      BL       DMA_Init
+     92                  DMA_Cmd(DMA1_Channel1, ENABLE);
+   \       0x42   0x2101             MOVS     R1,#+1
+   \       0x44   0x0020             MOVS     R0,R4
+   \       0x46   0x.... 0x....      BL       DMA_Cmd
+     93          
+     94          }
+   \       0x4A   0xB00C             ADD      SP,SP,#+48
+   \       0x4C   0xBD10             POP      {R4,PC}
+     95          
+
+   \                                 In section .text, align 2, keep-with-next
+     96          void ADC_Configure(void)
+     97          {
+   \                     ADC_Configure: (+1)
+   \        0x0   0xB518             PUSH     {R3,R4,LR}
+   \        0x2   0xB085             SUB      SP,SP,#+20
+     98                  ADC_InitTypeDef ADC_InitStructure;
+     99                  
+    100                  ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;
+   \        0x4   0x2000             MOVS     R0,#+0
+   \        0x6   0x9000             STR      R0,[SP, #+0]
+    101                  ADC_InitStructure.ADC_ScanConvMode = ENABLE;
+   \        0x8   0x2001             MOVS     R0,#+1
+   \        0xA   0xF88D 0x0004      STRB     R0,[SP, #+4]
+    102                  ADC_InitStructure.ADC_ContinuousConvMode = ENABLE;
+   \        0xE   0x2001             MOVS     R0,#+1
+   \       0x10   0xF88D 0x0005      STRB     R0,[SP, #+5]
+    103                  ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
+   \       0x14   0xF45F 0x2060      MOVS     R0,#+917504
+   \       0x18   0x9002             STR      R0,[SP, #+8]
+    104                  ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
+   \       0x1A   0x2000             MOVS     R0,#+0
+   \       0x1C   0x9003             STR      R0,[SP, #+12]
+    105                  ADC_InitStructure.ADC_NbrOfChannel = 1;
+   \       0x1E   0x2001             MOVS     R0,#+1
+   \       0x20   0xF88D 0x0010      STRB     R0,[SP, #+16]
+    106                
+    107                  ADC_Init(ADC1, &ADC_InitStructure);
+   \       0x24   0x....             LDR.N    R4,??DataTable5_4
+   \       0x26   0x4669             MOV      R1,SP
+   \       0x28   0x0020             MOVS     R0,R4
+   \       0x2A   0x.... 0x....      BL       ADC_Init
+    108                  
+    109                  ADC_RegularChannelConfig(ADC1, ADC_Channel_5, 1, ADC_SampleTime_41Cycles5);
+   \       0x2E   0x2304             MOVS     R3,#+4
+   \       0x30   0x2201             MOVS     R2,#+1
+   \       0x32   0x2105             MOVS     R1,#+5
+   \       0x34   0x0020             MOVS     R0,R4
+   \       0x36   0x.... 0x....      BL       ADC_RegularChannelConfig
+    110                  
+    111                  ADC_DMACmd(ADC1, ENABLE);
+   \       0x3A   0x2101             MOVS     R1,#+1
+   \       0x3C   0x0020             MOVS     R0,R4
+   \       0x3E   0x.... 0x....      BL       ADC_DMACmd
+    112                  
+    113                  ADC_Cmd(ADC1, ENABLE);
+   \       0x42   0x2101             MOVS     R1,#+1
+   \       0x44   0x0020             MOVS     R0,R4
+   \       0x46   0x.... 0x....      BL       ADC_Cmd
+    114                  
+    115                  ADC_ResetCalibration(ADC1);
+   \       0x4A   0x0020             MOVS     R0,R4
+   \       0x4C   0x.... 0x....      BL       ADC_ResetCalibration
+    116                  
+    117                  while(ADC_GetResetCalibrationStatus(ADC1)) {}
+   \                     ??ADC_Configure_0: (+1)
+   \       0x50   0x0020             MOVS     R0,R4
+   \       0x52   0x.... 0x....      BL       ADC_GetResetCalibrationStatus
+   \       0x56   0x2800             CMP      R0,#+0
+   \       0x58   0xD1FA             BNE.N    ??ADC_Configure_0
+    118                  
+    119                  ADC_StartCalibration(ADC1);
+   \       0x5A   0x0020             MOVS     R0,R4
+   \       0x5C   0x.... 0x....      BL       ADC_StartCalibration
+    120                  
+    121                  while(ADC_GetCalibrationStatus(ADC1)) {}
+   \                     ??ADC_Configure_1: (+1)
+   \       0x60   0x0020             MOVS     R0,R4
+   \       0x62   0x.... 0x....      BL       ADC_GetCalibrationStatus
+   \       0x66   0x2800             CMP      R0,#+0
+   \       0x68   0xD1FA             BNE.N    ??ADC_Configure_1
+    122                  
+    123                  ADC_SoftwareStartConvCmd(ADC1, ENABLE);
+   \       0x6A   0x2101             MOVS     R1,#+1
+   \       0x6C   0x0020             MOVS     R0,R4
+   \       0x6E   0x.... 0x....      BL       ADC_SoftwareStartConvCmd
+    124                  
+    125          }
+   \       0x72   0xB006             ADD      SP,SP,#+24
+   \       0x74   0xBD10             POP      {R4,PC}
+    126          
+
+   \                                 In section .text, align 2, keep-with-next
+    127          void NVIC_Configure(void)
+    128          {
+   \                     NVIC_Configure: (+1)
+   \        0x0   0xB580             PUSH     {R7,LR}
+    129                  NVIC_InitTypeDef NVIC_InitStructure;
+    130          
+    131                  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+   \        0x2   0xF44F 0x60C0      MOV      R0,#+1536
+   \        0x6   0x.... 0x....      BL       NVIC_PriorityGroupConfig
+    132                  
+    133                  NVIC_InitStructure.NVIC_IRQChannel = EXTI1_IRQn;
+   \        0xA   0x2007             MOVS     R0,#+7
+   \        0xC   0xF88D 0x0000      STRB     R0,[SP, #+0]
+    134                  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1; // TODO
+   \       0x10   0x2001             MOVS     R0,#+1
+   \       0x12   0xF88D 0x0001      STRB     R0,[SP, #+1]
+    135                  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1; // TODO
+   \       0x16   0x2001             MOVS     R0,#+1
+   \       0x18   0xF88D 0x0002      STRB     R0,[SP, #+2]
+    136                  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+   \       0x1C   0x2001             MOVS     R0,#+1
+   \       0x1E   0xF88D 0x0003      STRB     R0,[SP, #+3]
+    137                  NVIC_Init(&NVIC_InitStructure);
+   \       0x22   0x4668             MOV      R0,SP
+   \       0x24   0x.... 0x....      BL       NVIC_Init
+    138          }
+   \       0x28   0xBD01             POP      {R0,PC}
+    139          
+
+   \                                 In section .text, align 2, keep-with-next
+    140          void EXTI1_IRQHandler() {
+   \                     EXTI1_IRQHandler: (+1)
+   \        0x0   0xB580             PUSH     {R7,LR}
+    141              if (EXTI_GetITStatus(EXTI_Line1) != RESET) {
+   \        0x2   0x2002             MOVS     R0,#+2
+   \        0x4   0x.... 0x....      BL       EXTI_GetITStatus
+   \        0x8   0x2800             CMP      R0,#+0
+   \        0xA   0xD00F             BEQ.N    ??EXTI1_IRQHandler_0
+    142                  if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1) == Bit_SET) {
+   \        0xC   0x2102             MOVS     R1,#+2
+   \        0xE   0x....             LDR.N    R0,??DataTable5
+   \       0x10   0x.... 0x....      BL       GPIO_ReadInputDataBit
+   \       0x14   0x2801             CMP      R0,#+1
+   \       0x16   0xD103             BNE.N    ??EXTI1_IRQHandler_1
+    143                      sensorFlag = 1;
+   \       0x18   0x2001             MOVS     R0,#+1
+   \       0x1A   0x....             LDR.N    R1,??DataTable5_5
+   \       0x1C   0x6008             STR      R0,[R1, #+0]
+   \       0x1E   0xE002             B.N      ??EXTI1_IRQHandler_2
+    144                  }
+    145                  else {
+    146                      sensorFlag = 0;
+   \                     ??EXTI1_IRQHandler_1: (+1)
+   \       0x20   0x2000             MOVS     R0,#+0
+   \       0x22   0x....             LDR.N    R1,??DataTable5_5
+   \       0x24   0x6008             STR      R0,[R1, #+0]
+    147                  }
+    148                  EXTI_ClearITPendingBit(EXTI_Line1);
+   \                     ??EXTI1_IRQHandler_2: (+1)
+   \       0x26   0x2002             MOVS     R0,#+2
+   \       0x28   0x.... 0x....      BL       EXTI_ClearITPendingBit
+    149              }
+    150          
+    151          
+    152          }
+   \                     ??EXTI1_IRQHandler_0: (+1)
+   \       0x2C   0xBD01             POP      {R0,PC}
+    153          
+
+   \                                 In section .text, align 2, keep-with-next
+    154          int main(void)
+    155          {
+   \                     main: (+1)
+   \        0x0   0xB51C             PUSH     {R2-R4,LR}
+    156            	SystemInit();
+   \        0x2   0x.... 0x....      BL       SystemInit
+    157                  RCCInit();
+   \        0x6   0x.... 0x....      BL       RCCInit
+    158                  GpioInit();
+   \        0xA   0x.... 0x....      BL       GpioInit
+    159                  EXTI_Configure();
+   \        0xE   0x.... 0x....      BL       EXTI_Configure
+    160                  //DMA_Configure();
+    161                  //ADC_Configure();
+    162                  NVIC_Configure();
+   \       0x12   0x.... 0x....      BL       NVIC_Configure
+    163                  
+    164          	LCD_Init();
+   \       0x16   0x.... 0x....      BL       LCD_Init
+    165          	Touch_Configuration();
+   \       0x1A   0x.... 0x....      BL       Touch_Configuration
+    166          	Touch_Adjust();
+   \       0x1E   0x.... 0x....      BL       Touch_Adjust
+    167          	LCD_Clear(WHITE);	       
+   \       0x22   0xF64F 0x74FF      MOVW     R4,#+65535
+   \       0x26   0x0020             MOVS     R0,R4
+   \       0x28   0x.... 0x....      BL       LCD_Clear
+    168                  
+    169                  while(1) {
+    170                          LCD_ShowNum(100, 160, sensorFlag, 10, BLACK, WHITE);
+   \                     ??main_0: (+1)
+   \       0x2C   0x0020             MOVS     R0,R4
+   \       0x2E   0x9001             STR      R0,[SP, #+4]
+   \       0x30   0x2000             MOVS     R0,#+0
+   \       0x32   0x9000             STR      R0,[SP, #+0]
+   \       0x34   0x230A             MOVS     R3,#+10
+   \       0x36   0x....             LDR.N    R0,??DataTable5_5
+   \       0x38   0x6802             LDR      R2,[R0, #+0]
+   \       0x3A   0x21A0             MOVS     R1,#+160
+   \       0x3C   0x2064             MOVS     R0,#+100
+   \       0x3E   0x.... 0x....      BL       LCD_ShowNum
+   \       0x42   0xE7F3             B.N      ??main_0
+    171                          //LCD_ShowNum(100, 160, ADC_Value[1], 10, BLACK, WHITE);
+    172          	}
+    173          }
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable5:
+   \        0x0   0x4001'0C00        DC32     0x40010c00
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable5_1:
+   \        0x0   0x4001'244C        DC32     0x4001244c
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable5_2:
+   \        0x0   0x....'....        DC32     ADC_Value+0x4
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable5_3:
+   \        0x0   0x4002'0008        DC32     0x40020008
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable5_4:
+   \        0x0   0x4001'2400        DC32     0x40012400
+
+   \                                 In section .text, align 4, keep-with-next
+   \                     ??DataTable5_5:
+   \        0x0   0x....'....        DC32     sensorFlag
+
+   Maximum stack usage in bytes:
+
+   .cstack Function
+   ------- --------
+      32   ADC_Configure
+        32   -> ADC_Cmd
+        32   -> ADC_DMACmd
+        32   -> ADC_GetCalibrationStatus
+        32   -> ADC_GetResetCalibrationStatus
+        32   -> ADC_Init
+        32   -> ADC_RegularChannelConfig
+        32   -> ADC_ResetCalibration
+        32   -> ADC_SoftwareStartConvCmd
+        32   -> ADC_StartCalibration
+      56   DMA_Configure
+        56   -> DMA_Cmd
+        56   -> DMA_Init
+       8   EXTI1_IRQHandler
+         8   -> EXTI_ClearITPendingBit
+         8   -> EXTI_GetITStatus
+         8   -> GPIO_ReadInputDataBit
+      16   EXTI_Configure
+        16   -> EXTI_Init
+        16   -> GPIO_EXTILineConfig
+       8   GpioInit
+         8   -> GPIO_Init
+       8   NVIC_Configure
+         8   -> NVIC_Init
+         8   -> NVIC_PriorityGroupConfig
+       8   RCCInit
+         8   -> RCC_APB2PeriphClockCmd
+      16   main
+        16   -> EXTI_Configure
+        16   -> GpioInit
+        16   -> LCD_Clear
+        16   -> LCD_Init
+        16   -> LCD_ShowNum
+        16   -> NVIC_Configure
+        16   -> RCCInit
+        16   -> SystemInit
+        16   -> Touch_Adjust
+        16   -> Touch_Configuration
+
+
+   Section sizes:
+
+   Bytes  Function/Label
+   -----  --------------
+       4  ??DataTable5
+       4  ??DataTable5_1
+       4  ??DataTable5_2
+       4  ??DataTable5_3
+       4  ??DataTable5_4
+       4  ??DataTable5_5
+     118  ADC_Configure
+       8  ADC_Value
+      78  DMA_Configure
+      46  EXTI1_IRQHandler
+      40  EXTI_Configure
+      30  GpioInit
+      42  NVIC_Configure
+      20  RCCInit
+      68  main
+       4  sensorFlag
+
+ 
+  12 bytes in section .bss
+ 466 bytes in section .text
+ 
+ 466 bytes of CODE memory
+  12 bytes of DATA memory
+
+Errors: none
+Warnings: none
