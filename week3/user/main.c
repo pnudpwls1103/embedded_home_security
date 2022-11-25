@@ -20,9 +20,11 @@ void ADC_Configure(void);
 void NVIC_Configure(void);
 
 void EXTI1_IRQHandler(void);
+void EXTI15_10_IRQHandler(void);
 void Delay(void);
 
 int sensorFlag = 0;
+int btnFlag = 0;
 void RCCInit(void)
 {	
         /* Alternate Function IO clock enable */
@@ -34,10 +36,11 @@ void RCCInit(void)
         //RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPEEN, ENABLE);
         
         // 인체감지센서 Digital pin
-        RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPBEN, ENABLE);
+        //RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPBEN, ENABLE);
         
-        //RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPCEN, ENABLE);
-        //RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPDEN, ENABLE);
+        // 릴레이모듈 (부저)
+        RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPCEN, ENABLE);
+        RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPDEN, ENABLE);
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
 }
 
@@ -56,20 +59,39 @@ void GpioInit(void)
         //GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
         //GPIO_Init(GPIOE, &GPIO_InitStructure);
         
-        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
+        //GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
+        //GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+        //GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
+        //GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
         GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
-        GPIO_Init(GPIOB, &GPIO_InitStructure);
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+        GPIO_Init(GPIOD, &GPIO_InitStructure);
+        
+        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
+        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+        GPIO_Init(GPIOC, &GPIO_InitStructure);
 }
 
 void EXTI_Configure(void)
 {
         EXTI_InitTypeDef EXTI_InitStructure;
-
-        GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource1);
-        EXTI_InitStructure.EXTI_Line = EXTI_Line1;
+        
+        // 인체감지센서 EXTI (PB1)
+        //GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource1);
+        //EXTI_InitStructure.EXTI_Line = EXTI_Line1;
+        //EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+        //EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
+        //EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+        //EXTI_Init(&EXTI_InitStructure);
+        
+        // 버튼 EXTI (PD11)
+        GPIO_EXTILineConfig(GPIO_PortSourceGPIOD, GPIO_PinSource11);
+        EXTI_InitStructure.EXTI_Line = EXTI_Line11;
         EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-        EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
+        EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling;
         EXTI_InitStructure.EXTI_LineCmd = ENABLE;
         EXTI_Init(&EXTI_InitStructure);
 }
@@ -130,9 +152,17 @@ void NVIC_Configure(void)
 
         NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
         
-        NVIC_InitStructure.NVIC_IRQChannel = EXTI1_IRQn;
-        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1; // TODO
-        NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1; // TODO
+        // 인체감지센서 NVIC
+        //NVIC_InitStructure.NVIC_IRQChannel = EXTI1_IRQn;
+        //NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
+        //NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1;
+        //NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+        //NVIC_Init(&NVIC_InitStructure);
+        
+        // 버튼 NVIC
+        NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn;
+        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
+        NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1;
         NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
         NVIC_Init(&NVIC_InitStructure);
 }
@@ -146,6 +176,18 @@ void EXTI1_IRQHandler() {
             sensorFlag = 0;
         }
         EXTI_ClearITPendingBit(EXTI_Line1);
+    }
+
+
+}
+
+void EXTI15_10_IRQHandler() {
+    if (EXTI_GetITStatus(EXTI_Line11) != RESET) {
+        if (GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_11) == Bit_RESET) {
+            btnFlag = (btnFlag == 0) ? 1 : 0;
+        }
+
+        EXTI_ClearITPendingBit(EXTI_Line11);
     }
 
 
@@ -166,8 +208,14 @@ int main(void)
 	Touch_Adjust();
 	LCD_Clear(WHITE);	       
         
+        GPIO_ResetBits(GPIOC, GPIO_Pin_8);
         while(1) {
-                LCD_ShowNum(100, 160, sensorFlag, 10, BLACK, WHITE);
+                if(btnFlag)
+                    GPIO_SetBits(GPIOC, GPIO_Pin_8);
+                else
+                    GPIO_ResetBits(GPIOC, GPIO_Pin_8);
+                LCD_ShowNum(100, 160, btnFlag, 10, BLACK, WHITE);
+                //LCD_ShowNum(100, 160, sensorFlag, 10, BLACK, WHITE);
                 //LCD_ShowNum(100, 160, ADC_Value[1], 10, BLACK, WHITE);
 	}
 }
