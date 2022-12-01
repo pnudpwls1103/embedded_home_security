@@ -19,9 +19,13 @@ void DMA_Configure(void);
 void ADC_Configure(void);
 void NVIC_Configure(void);
 void TIM_Configure(void);
+void USART1_Init(void);
+void USRAT2_Init(void);
 
 void EXTI1_IRQHandler(void);
 void EXTI15_10_IRQHandler(void);
+void USART1_IRQHandler(void);
+void USART2_IRQHandler(void);
 
 void Delay(void);
 void ControlPWM(int PWM);
@@ -32,10 +36,12 @@ int btnFlag = 0;
 // 서보모터 (1000 -> 2000으로 바꾸기)
 void RCCInit(void)
 {	
+        // Althernate Function IO 
+        RCC_APB2PeriphClockCmd(RCC_APB2ENR_AFIOEN, ENABLE);
+        
         // 가스센서 ADC
         RCC_APB2PeriphClockCmd(RCC_APB2ENR_ADC1EN, ENABLE);
         RCC_AHBPeriphClockCmd(RCC_AHBENR_DMA1EN, ENABLE);
-        RCC_APB2PeriphClockCmd(RCC_APB2ENR_AFIOEN, ENABLE);
         
         // 인체감지센서, PWM Digital pin
         RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPBEN, ENABLE);
@@ -50,6 +56,16 @@ void RCCInit(void)
         
         // PWM - 서보모터(PB0)
         RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPBEN, ENABLE);
+        
+        // UART TX/RX
+        RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPAEN, ENABLE);
+        
+        // USART1
+        RCC_APB2PeriphClockCmd(RCC_APB2ENR_USART1EN, ENABLE);
+        
+        // UART2
+        RCC_APB1PeriphClockCmd(RCC_APB1ENR_USART2EN, ENABLE);
+
 
 }
 
@@ -88,11 +104,37 @@ void GpioInit(void)
         GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
         GPIO_Init(GPIOC, &GPIO_InitStructure);
         
-        // TIMER
+        // TIMER3_CH3 (PB0)
         GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
         GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
         GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-        GPIO_Init(GPIOB, &GPIO_InitStructure);    
+        GPIO_Init(GPIOB, &GPIO_InitStructure);
+        
+        /* UART1 pin setting */
+        //TX (PA9)
+        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
+        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+        GPIO_Init(GPIOA, &GPIO_InitStructure);
+        
+	//RX (PA10)
+        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
+        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+        GPIO_Init(GPIOA, &GPIO_InitStructure);
+        
+        /* UART2 pin setting */
+        //TX (PA2)
+        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
+        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+        GPIO_Init(GPIOA, &GPIO_InitStructure);
+        
+	//RX (PA3)
+        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
+        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+        GPIO_Init(GPIOA, &GPIO_InitStructure);
 }
 
 void EXTI_Configure(void)
@@ -194,6 +236,22 @@ void NVIC_Configure(void)
         NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1;
         NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
         NVIC_Init(&NVIC_InitStructure);
+        
+        // UART1
+        NVIC_EnableIRQ(USART1_IRQn);
+        NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
+        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
+        NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1;
+        NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+        NVIC_Init(&NVIC_InitStructure);
+        
+        // UART2
+        NVIC_EnableIRQ(USART2_IRQn);
+        NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
+        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
+        NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1;
+        NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+        NVIC_Init(&NVIC_InitStructure);
 }
 
 void TIM_Configure(void)
@@ -217,6 +275,41 @@ void TIM_Configure(void)
         TIM_OC3PreloadConfig(TIM3, TIM_OCPreload_Disable);
         TIM_ARRPreloadConfig(TIM3, ENABLE);
         TIM_Cmd(TIM3, ENABLE);
+}
+
+void USART1_Init(void)
+{
+	USART_InitTypeDef USART1_InitStructure;
+
+	USART_Cmd(USART1, ENABLE);
+	
+	USART1_InitStructure.USART_WordLength = USART_WordLength_8b;
+        USART1_InitStructure.USART_StopBits = USART_StopBits_1;
+        USART1_InitStructure.USART_Parity = USART_Parity_No;
+        USART1_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+        USART1_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+        USART1_InitStructure.USART_BaudRate = 9600;
+        USART_Init(USART1, &USART1_InitStructure);
+	
+        USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+}
+
+void USART2_Init(void)
+{
+	USART_InitTypeDef USART2_InitStructure;
+
+	USART_Cmd(USART2, ENABLE);
+	
+	USART2_InitStructure.USART_WordLength = USART_WordLength_8b;
+        USART2_InitStructure.USART_StopBits = USART_StopBits_1;
+        USART2_InitStructure.USART_Parity = USART_Parity_No;
+        USART2_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+        USART2_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+        USART2_InitStructure.USART_BaudRate = 9600;
+        USART_Init(USART2, &USART2_InitStructure);
+	
+        USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
+	
 }
 
 void EXTI1_IRQHandler() {
@@ -243,6 +336,28 @@ void EXTI15_10_IRQHandler() {
     }
 }
 
+void USART1_IRQHandler()
+{
+	uint16_t word;
+        if(USART_GetITStatus(USART1,USART_IT_RXNE)!=RESET){
+            word = USART_ReceiveData(USART1);
+            USART_SendData(USART2, word);
+            USART_ClearITPendingBit(USART1,USART_IT_RXNE);
+        }
+}
+
+
+void USART2_IRQHandler(void)
+{
+	uint16_t word;
+        if(USART_GetITStatus(USART2,USART_IT_RXNE)!=RESET){
+            word = USART_ReceiveData(USART2);
+            USART_SendData(USART1, word);
+            USART_ClearITPendingBit(USART2,USART_IT_RXNE);
+        }
+}
+
+
 void ControlPWM(int PWM) {
         TIM_OCInitTypeDef       TIM_OCInitStructure;
         
@@ -262,36 +377,38 @@ int main(void)
         DMA_Configure();
         ADC_Configure();
         TIM_Configure();
+        USART1_Init();
+        USART2_Init();
         NVIC_Configure();
         
-        GPIO_ResetBits(GPIOC, GPIO_Pin_8);
-        GPIO_ResetBits(GPIOC, GPIO_Pin_9);
+        // GPIO_ResetBits(GPIOC, GPIO_Pin_8);
+        // GPIO_ResetBits(GPIOC, GPIO_Pin_9);
         
-	LCD_Init();
-	Touch_Configuration();
-	Touch_Adjust();
-	LCD_Clear(WHITE);	       
+	// LCD_Init();
+	// Touch_Configuration();
+	// Touch_Adjust();
+	// LCD_Clear(WHITE);	       
         
-        LCD_ShowString(80, 120, "Gas: ", BLACK, WHITE);
-        LCD_ShowString(80, 140, "Motion: ", BLACK, WHITE);
-        LCD_ShowString(80, 160, "Button: ", BLACK, WHITE);
+        // LCD_ShowString(80, 120, "Gas: ", BLACK, WHITE);
+        // LCD_ShowString(80, 140, "Motion: ", BLACK, WHITE);
+        // LCD_ShowString(80, 160, "Button: ", BLACK, WHITE);
         
         while(1) {
-                if(btnFlag)
-                {
-                    GPIO_SetBits(GPIOC, GPIO_Pin_8);
-                    GPIO_SetBits(GPIOC, GPIO_Pin_9);
-                }
-                else
-                {
-                    GPIO_ResetBits(GPIOC, GPIO_Pin_8);
-                    GPIO_ResetBits(GPIOC, GPIO_Pin_9);
+                // if(btnFlag)
+                // {
+                //     GPIO_SetBits(GPIOC, GPIO_Pin_8);
+                //     GPIO_SetBits(GPIOC, GPIO_Pin_9);
+                // }
+                // else
+                // {
+                //     GPIO_ResetBits(GPIOC, GPIO_Pin_8);
+                //     GPIO_ResetBits(GPIOC, GPIO_Pin_9);
 
-                }
+                // }
                 
-                LCD_ShowNum(100, 120, ADC_Value[1], 10, BLACK, WHITE);
-                LCD_ShowNum(100, 140, sensorFlag, 10, BLACK, WHITE);
-                LCD_ShowNum(100, 160, btnFlag, 10, RED, WHITE);
+                // LCD_ShowNum(100, 120, ADC_Value[1], 10, BLACK, WHITE);
+                // LCD_ShowNum(100, 140, sensorFlag, 10, BLACK, WHITE);
+                // LCD_ShowNum(100, 160, btnFlag, 10, RED, WHITE);
                 
 	}
 }

@@ -335,7 +335,7 @@
             <outputs>
                 <tool>
                     <name>ICCARM</name>
-                    <file> 64</file>
+                    <file> 64 39</file>
                 </tool>
             </outputs>
             <inputs>
