@@ -10,6 +10,8 @@
 
 // volatile unsigned 32bits
 volatile uint32_t ADC_Value[2];
+uint16_t x = 0;
+uint16_t y = 0;
 
 /* function prototype */
 void RCCInit(void);
@@ -29,8 +31,12 @@ void USART2_IRQHandler(void);
 
 void Delay(void);
 void ControlPWM(int PWM);
+void SetIntruderAlarm(void);
+void ResetIntruderAlarm(void);
+void SetFireAlarm(void);
+void ResetFireAlarm(void);
 
-int sensorFlag = 0;
+int motionFlag = 0;
 int btnFlag = 0;
 
 // 서보모터 (1000 -> 2000으로 바꾸기)
@@ -315,10 +321,10 @@ void USART2_Init(void)
 void EXTI1_IRQHandler() {
     if (EXTI_GetITStatus(EXTI_Line1) != RESET) {
         if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1) == Bit_SET) {
-            sensorFlag = 1;
+            motionFlag = 1;
         }
         else {
-            sensorFlag = 0;
+            motionFlag = 0;
         }
         EXTI_ClearITPendingBit(EXTI_Line1);
     }
@@ -352,7 +358,17 @@ void USART2_IRQHandler(void)
 	uint16_t word;
         if(USART_GetITStatus(USART2,USART_IT_RXNE)!=RESET){
             word = USART_ReceiveData(USART2);
-            USART_SendData(USART1, word);
+            switch (word) {
+                case 1:
+                        ResetFireAlarm();
+                        break;
+                case 2: 
+                        ResetIntruderAlarm();
+                        break;
+                default:
+                        break;
+            }
+            
             USART_ClearITPendingBit(USART2,USART_IT_RXNE);
         }
 }
@@ -368,6 +384,30 @@ void ControlPWM(int PWM) {
         TIM_OC3Init(TIM3, &TIM_OCInitStructure);
 }
 
+void SetIntruderAlarm()
+{
+        GPIO_SetBits(GPIOC, GPIO_Pin_9);
+}
+
+void ResetIntruderAlarm()
+{
+        GPIO_ResetBits(GPIOC, GPIO_Pin_9);
+}
+
+void SetFireAlarm()
+{
+        GPIO_SetBits(GPIOC, GPIO_Pin_8);
+        GPIO_SetBits(GPIOC, GPIO_Pin_9);
+        ControlPWM(2000);
+}
+
+void ResetFireAlarm()
+{
+        GPIO_ResetBits(GPIOC, GPIO_Pin_8);
+        GPIO_ResetBits(GPIOC, GPIO_Pin_9);
+        ControlPWM(1000);
+}
+
 int main(void)
 {
   	SystemInit();
@@ -381,34 +421,49 @@ int main(void)
         USART2_Init();
         NVIC_Configure();
         
-        // GPIO_ResetBits(GPIOC, GPIO_Pin_8);
-        // GPIO_ResetBits(GPIOC, GPIO_Pin_9);
+        GPIO_ResetBits(GPIOC, GPIO_Pin_8);
+        GPIO_ResetBits(GPIOC, GPIO_Pin_9);
         
-	// LCD_Init();
-	// Touch_Configuration();
-	// Touch_Adjust();
-	// LCD_Clear(WHITE);	       
+	LCD_Init();
+	Touch_Configuration();
+	Touch_Adjust();
+	LCD_Clear(WHITE);	       
         
-        // LCD_ShowString(80, 120, "Gas: ", BLACK, WHITE);
-        // LCD_ShowString(80, 140, "Motion: ", BLACK, WHITE);
-        // LCD_ShowString(80, 160, "Button: ", BLACK, WHITE);
+        LCD_DrawLine(80, 0, 80, 320);
+        LCD_DrawLine(160, 0, 160, 320);
+        LCD_DrawLine(0, 80, 240, 80);
+        LCD_DrawLine(0, 160, 240, 160);
+        LCD_DrawLine(0, 240, 240, 240);
+        
+	for(int i = 1; i <=3; i++) {
+            for(int j = 3*i-2; j <= 3*i; j++) {
+                uint16_t x = 37 + ((j-1)%3) * 80;
+                uint16_t y = 34 + ((i-1)%3) * 80;
+                LCD_ShowNum(x, y, j, 1, BLACK, WHITE);
+            }
+        }
+        
+        LCD_ShowString(37, 274, "*", BLACK, WHITE);
+        LCD_ShowString(117, 274, "0", BLACK, WHITE);
+        LCD_ShowString(197, 274, "#", BLACK, WHITE);
         
         while(1) {
-                // if(btnFlag)
-                // {
-                //     GPIO_SetBits(GPIOC, GPIO_Pin_8);
-                //     GPIO_SetBits(GPIOC, GPIO_Pin_9);
-                // }
-                // else
-                // {
-                //     GPIO_ResetBits(GPIOC, GPIO_Pin_8);
-                //     GPIO_ResetBits(GPIOC, GPIO_Pin_9);
+                if(ADC_Value[1] > 150)
+                {
+                        USART_SendData(USART2, (uint16_t)1);
+                        SetFireAlarm();
+                }
 
-                // }
-                
-                // LCD_ShowNum(100, 120, ADC_Value[1], 10, BLACK, WHITE);
-                // LCD_ShowNum(100, 140, sensorFlag, 10, BLACK, WHITE);
-                // LCD_ShowNum(100, 160, btnFlag, 10, RED, WHITE);
-                
+                if(btnFlag && motionFlag)
+                {
+                        USART_SendData(USART2, (uint16_t)2);
+                        SetIntruderAlarm();
+                }
+                // 240 * 320
+                Touch_GetXY(&x, &y, 1);
+                Convert_Pos(x, y, &x, &y);
+
+                LCD_ShowNum(130, 120, x, 3, BLACK, WHITE);
+                LCD_ShowNum(130, 140, y, 3, BLACK, WHITE);
 	}
 }
