@@ -18,13 +18,18 @@ void EXTI_Configure(void);
 void DMA_Configure(void);
 void ADC_Configure(void);
 void NVIC_Configure(void);
+void TIM_Configure(void);
 
 void EXTI1_IRQHandler(void);
 void EXTI15_10_IRQHandler(void);
+
 void Delay(void);
+void ControlPWM(int PWM);
 
 int sensorFlag = 0;
 int btnFlag = 0;
+
+// 서보모터 (1000 -> 2000으로 바꾸기)
 void RCCInit(void)
 {	
         // 가스센서 ADC
@@ -32,13 +37,20 @@ void RCCInit(void)
         RCC_AHBPeriphClockCmd(RCC_AHBENR_DMA1EN, ENABLE);
         RCC_APB2PeriphClockCmd(RCC_APB2ENR_AFIOEN, ENABLE);
         
-        // 인체감지센서 Digital pin
+        // 인체감지센서, PWM Digital pin
         RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPBEN, ENABLE);
         
         // 릴레이모듈 (부저)
         RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPCEN, ENABLE);
         RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPDEN, ENABLE);
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
+        
+        // TIMER
+        RCC_APB1PeriphClockCmd(RCC_APB1ENR_TIM3EN, ENABLE);
+        
+        // PWM - 서보모터(PB0)
+        RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPBEN, ENABLE);
+
 }
 
 
@@ -75,6 +87,12 @@ void GpioInit(void)
         GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
         GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
         GPIO_Init(GPIOC, &GPIO_InitStructure);
+        
+        // TIMER
+        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0;
+        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+        GPIO_Init(GPIOB, &GPIO_InitStructure);    
 }
 
 void EXTI_Configure(void)
@@ -97,6 +115,7 @@ void EXTI_Configure(void)
         EXTI_InitStructure.EXTI_LineCmd = ENABLE;
         EXTI_Init(&EXTI_InitStructure);
 }
+
 void DMA_Configure(void) {
         DMA_InitTypeDef DMA_Instructure;
         
@@ -167,6 +186,37 @@ void NVIC_Configure(void)
         NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1;
         NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
         NVIC_Init(&NVIC_InitStructure);
+        
+        // PWM Timer3 NVIC
+        NVIC_EnableIRQ(TIM3_IRQn);
+        NVIC_InitStructure.NVIC_IRQChannel = TIM3_IRQn;
+        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
+        NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1;
+        NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+        NVIC_Init(&NVIC_InitStructure);
+}
+
+void TIM_Configure(void)
+{
+        TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+        TIM_OCInitTypeDef       TIM_OCInitStructure;
+        
+        // TIM3_CH3 (PWM)
+        TIM_TimeBaseStructure.TIM_Period = 20000;
+        TIM_TimeBaseStructure.TIM_Prescaler = 72;
+        TIM_TimeBaseStructure.TIM_ClockDivision = 0;
+        TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Down;
+        
+        TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
+        TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
+        TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+        TIM_OCInitStructure.TIM_Pulse = 1500;
+        TIM_OC3Init(TIM3, &TIM_OCInitStructure);
+        
+        TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);
+        TIM_OC3PreloadConfig(TIM3, TIM_OCPreload_Disable);
+        TIM_ARRPreloadConfig(TIM3, ENABLE);
+        TIM_Cmd(TIM3, ENABLE);
 }
 
 void EXTI1_IRQHandler() {
@@ -185,14 +235,22 @@ void EXTI1_IRQHandler() {
 
 void EXTI15_10_IRQHandler() {
     if (EXTI_GetITStatus(EXTI_Line11) != RESET) {
-        if (GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_11) == Bit_RESET) {
+        if (GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_11) == Bit_RESET){
             btnFlag = (btnFlag == 0) ? 1 : 0;
         }
 
         EXTI_ClearITPendingBit(EXTI_Line11);
     }
+}
 
-
+void ControlPWM(int PWM) {
+        TIM_OCInitTypeDef       TIM_OCInitStructure;
+        
+        TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
+        TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
+        TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+        TIM_OCInitStructure.TIM_Pulse = PWM;
+        TIM_OC3Init(TIM3, &TIM_OCInitStructure);
 }
 
 int main(void)
@@ -203,6 +261,7 @@ int main(void)
         EXTI_Configure();
         DMA_Configure();
         ADC_Configure();
+        TIM_Configure();
         NVIC_Configure();
         
         GPIO_ResetBits(GPIOC, GPIO_Pin_8);
@@ -216,6 +275,7 @@ int main(void)
         LCD_ShowString(80, 120, "Gas: ", BLACK, WHITE);
         LCD_ShowString(80, 140, "Motion: ", BLACK, WHITE);
         LCD_ShowString(80, 160, "Button: ", BLACK, WHITE);
+        
         while(1) {
                 if(btnFlag)
                 {
@@ -226,12 +286,12 @@ int main(void)
                 {
                     GPIO_ResetBits(GPIOC, GPIO_Pin_8);
                     GPIO_ResetBits(GPIOC, GPIO_Pin_9);
+
                 }
                 
                 LCD_ShowNum(100, 120, ADC_Value[1], 10, BLACK, WHITE);
                 LCD_ShowNum(100, 140, sensorFlag, 10, BLACK, WHITE);
                 LCD_ShowNum(100, 160, btnFlag, 10, RED, WHITE);
-                
                 
 	}
 }
