@@ -8,8 +8,7 @@
 #include "lcd.h"
 #include "touch.h"
 
-// volatile unsigned 32bits
-volatile uint32_t ADC_Value[2];
+volatile uint16_t ADC_Value[8];
 uint16_t x = 0;
 uint16_t y = 0;
 
@@ -45,8 +44,10 @@ void RCCInit(void)
         // Althernate Function IO 
         RCC_APB2PeriphClockCmd(RCC_APB2ENR_AFIOEN, ENABLE);
         
-        // 가스센서 ADC
+        // 온도센서, 가스센서 ADC
         RCC_APB2PeriphClockCmd(RCC_APB2ENR_ADC1EN, ENABLE);
+        
+        // DMA
         RCC_AHBPeriphClockCmd(RCC_AHBENR_DMA1EN, ENABLE);
         
         // 인체감지센서, PWM Digital pin
@@ -80,7 +81,13 @@ void GpioInit(void)
 {
         GPIO_InitTypeDef GPIO_InitStructure;
         
-        // 가스센서 (PB5)
+        // 온도센서(PA1)
+        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
+        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+        GPIO_Init(GPIOA, &GPIO_InitStructure);
+        
+        // 가스센서 (PA5)
         GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
         GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
         GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
@@ -104,7 +111,7 @@ void GpioInit(void)
         GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
         GPIO_Init(GPIOC, &GPIO_InitStructure);
         
-        // 블루투스 - 릴레이모듈 (PC9)
+        // 부저 - 릴레이모듈 (PC9)
         GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
         GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
         GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
@@ -166,22 +173,21 @@ void EXTI_Configure(void)
 
 void DMA_Configure(void) {
         DMA_InitTypeDef DMA_Instructure;
-        
+
         DMA_Instructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
-        DMA_Instructure.DMA_MemoryBaseAddr = (uint32_t)&ADC_Value[1];
+        DMA_Instructure.DMA_MemoryBaseAddr = (uint32_t)ADC_Value;
         DMA_Instructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-        DMA_Instructure.DMA_BufferSize = 1;
+        DMA_Instructure.DMA_BufferSize = 8;
         DMA_Instructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
         DMA_Instructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-        DMA_Instructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Word;
-        DMA_Instructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Word;
+        DMA_Instructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
+        DMA_Instructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
         DMA_Instructure.DMA_Mode = DMA_Mode_Circular;
         DMA_Instructure.DMA_Priority = DMA_Priority_High;
-        DMA_Instructure.DMA_M2M = DMA_M2M_Enable;
+        DMA_Instructure.DMA_M2M = DMA_M2M_Disable;
         
         DMA_Init(DMA1_Channel1, &DMA_Instructure);
         DMA_Cmd(DMA1_Channel1, ENABLE);
-
 }
 
 void ADC_Configure(void)
@@ -193,11 +199,12 @@ void ADC_Configure(void)
         ADC_InitStructure.ADC_ContinuousConvMode = ENABLE;
         ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
         ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
-        ADC_InitStructure.ADC_NbrOfChannel = 1;
+        ADC_InitStructure.ADC_NbrOfChannel = 2;
       
         ADC_Init(ADC1, &ADC_InitStructure);
         
-        ADC_RegularChannelConfig(ADC1, ADC_Channel_5, 1, ADC_SampleTime_41Cycles5);
+        ADC_RegularChannelConfig(ADC1, ADC_Channel_1, 1, ADC_SampleTime_41Cycles5);
+        ADC_RegularChannelConfig(ADC1, ADC_Channel_5, 2, ADC_SampleTime_41Cycles5);
         
         ADC_DMACmd(ADC1, ENABLE);
         
@@ -412,6 +419,12 @@ int main(void)
 {
   	SystemInit();
         RCCInit();
+
+        LCD_Init();
+	Touch_Configuration();
+	Touch_Adjust();
+	LCD_Clear(WHITE);
+
         GpioInit();
         EXTI_Configure();
         DMA_Configure();
@@ -421,49 +434,52 @@ int main(void)
         USART2_Init();
         NVIC_Configure();
         
-        GPIO_ResetBits(GPIOC, GPIO_Pin_8);
-        GPIO_ResetBits(GPIOC, GPIO_Pin_9);
+        // GPIO_ResetBits(GPIOC, GPIO_Pin_8);
+        // GPIO_ResetBits(GPIOC, GPIO_Pin_9);
         
-	LCD_Init();
-	Touch_Configuration();
-	Touch_Adjust();
-	LCD_Clear(WHITE);	       
+		       
         
-        LCD_DrawLine(80, 0, 80, 320);
-        LCD_DrawLine(160, 0, 160, 320);
-        LCD_DrawLine(0, 80, 240, 80);
-        LCD_DrawLine(0, 160, 240, 160);
-        LCD_DrawLine(0, 240, 240, 240);
+        // LCD_DrawLine(80, 0, 80, 320);
+        // LCD_DrawLine(160, 0, 160, 320);
+        // LCD_DrawLine(0, 80, 240, 80);
+        // LCD_DrawLine(0, 160, 240, 160);
+        // LCD_DrawLine(0, 240, 240, 240);
         
-	for(int i = 1; i <=3; i++) {
-            for(int j = 3*i-2; j <= 3*i; j++) {
-                uint16_t x = 37 + ((j-1)%3) * 80;
-                uint16_t y = 34 + ((i-1)%3) * 80;
-                LCD_ShowNum(x, y, j, 1, BLACK, WHITE);
-            }
-        }
+	// for(int i = 1; i <=3; i++) {
+        //     for(int j = 3*i-2; j <= 3*i; j++) {
+        //         uint16_t x = 37 + ((j-1)%3) * 80;
+        //         uint16_t y = 34 + ((i-1)%3) * 80;
+        //         LCD_ShowNum(x, y, j, 1, BLACK, WHITE);
+        //     }
+        // }
         
-        LCD_ShowString(37, 274, "*", BLACK, WHITE);
-        LCD_ShowString(117, 274, "0", BLACK, WHITE);
-        LCD_ShowString(197, 274, "#", BLACK, WHITE);
-        
+        // LCD_ShowString(37, 274, "*", BLACK, WHITE);
+        // LCD_ShowString(117, 274, "0", BLACK, WHITE);
+        // LCD_ShowString(197, 274, "#", BLACK, WHITE);
         while(1) {
-                if(ADC_Value[1] > 150)
-                {
-                        USART_SendData(USART2, (uint16_t)1);
-                        SetFireAlarm();
-                }
+                float voltage = (ADC_Value[0] * 5.0) / 1024.0;
+                float temp = (voltage - 0.5) * 100 ;
+                LCD_ShowNum(130, 100, ADC_Value[0] , 4, BLACK, WHITE);
+                LCD_ShowNum(130, 120, (int)temp, 4, BLACK, WHITE);
+                LCD_ShowNum(130, 140, ADC_Value[1], 4, BLACK, WHITE);
+                
 
-                if(btnFlag && motionFlag)
-                {
-                        USART_SendData(USART2, (uint16_t)2);
-                        SetIntruderAlarm();
-                }
-                // 240 * 320
-                Touch_GetXY(&x, &y, 1);
-                Convert_Pos(x, y, &x, &y);
+                // if(ADC_Value[1] > 150)
+                // {
+                //         USART_SendData(USART2, (uint16_t)1);
+                //         SetFireAlarm();
+                // }
 
-                LCD_ShowNum(130, 120, x, 3, BLACK, WHITE);
-                LCD_ShowNum(130, 140, y, 3, BLACK, WHITE);
+                // if(btnFlag && motionFlag)
+                // {
+                //         USART_SendData(USART2, (uint16_t)2);
+                //         SetIntruderAlarm();
+                // }
+                // // 240 * 320
+                // Touch_GetXY(&x, &y, 1);
+                // Convert_Pos(x, y, &x, &y);
+
+                // LCD_ShowNum(130, 120, x, 3, BLACK, WHITE);
+                // LCD_ShowNum(130, 140, y, 3, BLACK, WHITE);
 	}
 }
