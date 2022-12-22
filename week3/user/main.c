@@ -8,11 +8,21 @@
 #include "lcd.h"
 #include "touch.h"
 
-volatile uint16_t ADC_Value[8];
-uint16_t x = 0;
-uint16_t y = 0;
+#define TEMPMAX 1000
+#define GASMAX  800
 
-/* function prototype */
+volatile uint16_t ADC_Value[1];
+
+volatile int btnFlag = 0;
+volatile int gasFlag = 0;
+
+char password[] = {'1', '2', '3', '4'};
+
+
+volatile int idx = 0;
+volatile int wrongflag = 0;
+volatile int wrongcnt = 0;
+
 void RCCInit(void);
 void GpioInit(void);
 void EXTI_Configure(void);
@@ -20,60 +30,35 @@ void DMA_Configure(void);
 void ADC_Configure(void);
 void NVIC_Configure(void);
 void TIM_Configure(void);
-void USART1_Init(void);
-void USRAT2_Init(void);
 
-void EXTI1_IRQHandler(void);
 void EXTI15_10_IRQHandler(void);
-void USART1_IRQHandler(void);
-void USART2_IRQHandler(void);
+void DMA1_Channel1_IRQHandler(void);
 
-void Delay(void);
 void ControlPWM(int PWM);
-void SetIntruderAlarm(void);
-void ResetIntruderAlarm(void);
 void SetFireAlarm(void);
 void ResetFireAlarm(void);
+char GetLCDNumber(uint16_t x, uint16_t y);
 
-int motionFlag = 0;
-int btnFlag = 0;
-
-// 서보모터 (1000 -> 2000으로 바꾸기)
 void RCCInit(void)
-{	
+{   
         // Althernate Function IO 
         RCC_APB2PeriphClockCmd(RCC_APB2ENR_AFIOEN, ENABLE);
         
-        // 온도센서, 가스센서 ADC
+        // 가스센서 ADC
         RCC_APB2PeriphClockCmd(RCC_APB2ENR_ADC1EN, ENABLE);
         
         // DMA
         RCC_AHBPeriphClockCmd(RCC_AHBENR_DMA1EN, ENABLE);
         
-        // 인체감지센서, PWM Digital pin
+        // PWM Digital pin
         RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPBEN, ENABLE);
         
         // 릴레이모듈 (부저)
         RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPCEN, ENABLE);
         RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPDEN, ENABLE);
-        RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
         
         // TIMER
         RCC_APB1PeriphClockCmd(RCC_APB1ENR_TIM3EN, ENABLE);
-        
-        // PWM - 서보모터(PB0)
-        RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPBEN, ENABLE);
-        
-        // UART TX/RX
-        RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPAEN, ENABLE);
-        
-        // USART1
-        RCC_APB2PeriphClockCmd(RCC_APB2ENR_USART1EN, ENABLE);
-        
-        // UART2
-        RCC_APB1PeriphClockCmd(RCC_APB1ENR_USART2EN, ENABLE);
-
-
 }
 
 
@@ -81,23 +66,11 @@ void GpioInit(void)
 {
         GPIO_InitTypeDef GPIO_InitStructure;
         
-        // 온도센서(PA1)
-        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
-        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
-        GPIO_Init(GPIOA, &GPIO_InitStructure);
-        
         // 가스센서 (PA5)
         GPIO_InitStructure.GPIO_Pin = GPIO_Pin_5;
         GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
         GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
         GPIO_Init(GPIOA, &GPIO_InitStructure);
-        
-        // 인체감지센서 (PB1)
-        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_1;
-        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
-        GPIO_Init(GPIOB, &GPIO_InitStructure);
         
         // 버튼 (PD11)
         GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
@@ -106,13 +79,7 @@ void GpioInit(void)
         GPIO_Init(GPIOD, &GPIO_InitStructure);
         
         // 펌프 - 릴레이모듈 (PC8)
-        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8;
-        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-        GPIO_Init(GPIOC, &GPIO_InitStructure);
-        
-        // 부저 - 릴레이모듈 (PC9)
-        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
+        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;
         GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
         GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
         GPIO_Init(GPIOC, &GPIO_InitStructure);
@@ -122,45 +89,11 @@ void GpioInit(void)
         GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
         GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
         GPIO_Init(GPIOB, &GPIO_InitStructure);
-        
-        /* UART1 pin setting */
-        //TX (PA9)
-        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
-        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-        GPIO_Init(GPIOA, &GPIO_InitStructure);
-        
-	//RX (PA10)
-        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
-        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-        GPIO_Init(GPIOA, &GPIO_InitStructure);
-        
-        /* UART2 pin setting */
-        //TX (PA2)
-        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
-        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-        GPIO_Init(GPIOA, &GPIO_InitStructure);
-        
-	//RX (PA3)
-        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
-        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-        GPIO_Init(GPIOA, &GPIO_InitStructure);
 }
 
 void EXTI_Configure(void)
 {
         EXTI_InitTypeDef EXTI_InitStructure;
-        
-        // 인체감지센서 EXTI (PB1)
-        GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource1);
-        EXTI_InitStructure.EXTI_Line = EXTI_Line1;
-        EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-        EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
-        EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-        EXTI_Init(&EXTI_InitStructure);
         
         // 버튼 EXTI (PD11)
         GPIO_EXTILineConfig(GPIO_PortSourceGPIOD, GPIO_PinSource11);
@@ -175,9 +108,9 @@ void DMA_Configure(void) {
         DMA_InitTypeDef DMA_Instructure;
 
         DMA_Instructure.DMA_PeripheralBaseAddr = (uint32_t)&ADC1->DR;
-        DMA_Instructure.DMA_MemoryBaseAddr = (uint32_t)ADC_Value;
+        DMA_Instructure.DMA_MemoryBaseAddr = (uint32_t)&ADC_Value[0];
         DMA_Instructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-        DMA_Instructure.DMA_BufferSize = 8;
+        DMA_Instructure.DMA_BufferSize = 1;
         DMA_Instructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
         DMA_Instructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
         DMA_Instructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
@@ -188,6 +121,7 @@ void DMA_Configure(void) {
         
         DMA_Init(DMA1_Channel1, &DMA_Instructure);
         DMA_Cmd(DMA1_Channel1, ENABLE);
+        DMA_ITConfig(DMA1_Channel1, DMA_IT_TC, ENABLE);
 }
 
 void ADC_Configure(void)
@@ -199,13 +133,12 @@ void ADC_Configure(void)
         ADC_InitStructure.ADC_ContinuousConvMode = ENABLE;
         ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
         ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
-        ADC_InitStructure.ADC_NbrOfChannel = 2;
+        ADC_InitStructure.ADC_NbrOfChannel = 1;
       
         ADC_Init(ADC1, &ADC_InitStructure);
-        
-        ADC_RegularChannelConfig(ADC1, ADC_Channel_1, 1, ADC_SampleTime_41Cycles5);
-        ADC_RegularChannelConfig(ADC1, ADC_Channel_5, 2, ADC_SampleTime_41Cycles5);
-        
+
+        ADC_RegularChannelConfig(ADC1, ADC_Channel_5, 1, ADC_SampleTime_41Cycles5);
+
         ADC_DMACmd(ADC1, ENABLE);
         
         ADC_Cmd(ADC1, ENABLE);
@@ -228,13 +161,6 @@ void NVIC_Configure(void)
 
         NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
         
-        // 인체감지센서 NVIC
-        NVIC_InitStructure.NVIC_IRQChannel = EXTI1_IRQn;
-        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
-        NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1;
-        NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-        NVIC_Init(&NVIC_InitStructure);
-        
         // 버튼 NVIC
         NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn;
         NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
@@ -250,17 +176,8 @@ void NVIC_Configure(void)
         NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
         NVIC_Init(&NVIC_InitStructure);
         
-        // UART1
-        NVIC_EnableIRQ(USART1_IRQn);
-        NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
-        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
-        NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1;
-        NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-        NVIC_Init(&NVIC_InitStructure);
-        
-        // UART2
-        NVIC_EnableIRQ(USART2_IRQn);
-        NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
+        // DMA
+        NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel1_IRQn;
         NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
         NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1;
         NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
@@ -290,93 +207,22 @@ void TIM_Configure(void)
         TIM_Cmd(TIM3, ENABLE);
 }
 
-void USART1_Init(void)
-{
-	USART_InitTypeDef USART1_InitStructure;
-
-	USART_Cmd(USART1, ENABLE);
-	
-	USART1_InitStructure.USART_WordLength = USART_WordLength_8b;
-        USART1_InitStructure.USART_StopBits = USART_StopBits_1;
-        USART1_InitStructure.USART_Parity = USART_Parity_No;
-        USART1_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-        USART1_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-        USART1_InitStructure.USART_BaudRate = 9600;
-        USART_Init(USART1, &USART1_InitStructure);
-	
-        USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
-}
-
-void USART2_Init(void)
-{
-	USART_InitTypeDef USART2_InitStructure;
-
-	USART_Cmd(USART2, ENABLE);
-	
-	USART2_InitStructure.USART_WordLength = USART_WordLength_8b;
-        USART2_InitStructure.USART_StopBits = USART_StopBits_1;
-        USART2_InitStructure.USART_Parity = USART_Parity_No;
-        USART2_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-        USART2_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-        USART2_InitStructure.USART_BaudRate = 9600;
-        USART_Init(USART2, &USART2_InitStructure);
-	
-        USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
-	
-}
-
-void EXTI1_IRQHandler() {
-    if (EXTI_GetITStatus(EXTI_Line1) != RESET) {
-        if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1) == Bit_SET) {
-            motionFlag = 1;
-        }
-        else {
-            motionFlag = 0;
-        }
-        EXTI_ClearITPendingBit(EXTI_Line1);
-    }
-
-
-}
-
 void EXTI15_10_IRQHandler() {
     if (EXTI_GetITStatus(EXTI_Line11) != RESET) {
         if (GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_11) == Bit_RESET){
             btnFlag = (btnFlag == 0) ? 1 : 0;
+            
         }
 
         EXTI_ClearITPendingBit(EXTI_Line11);
     }
 }
 
-void USART1_IRQHandler()
+void DMA1_Channel1_IRQHandler(void)
 {
-	uint16_t word;
-        if(USART_GetITStatus(USART1,USART_IT_RXNE)!=RESET){
-            word = USART_ReceiveData(USART1);
-            USART_SendData(USART2, word);
-            USART_ClearITPendingBit(USART1,USART_IT_RXNE);
-        }
-}
-
-
-void USART2_IRQHandler(void)
-{
-	uint16_t word;
-        if(USART_GetITStatus(USART2,USART_IT_RXNE)!=RESET){
-            word = USART_ReceiveData(USART2);
-            switch (word) {
-                case 1:
-                        ResetFireAlarm();
-                        break;
-                case 2: 
-                        ResetIntruderAlarm();
-                        break;
-                default:
-                        break;
-            }
-            
-            USART_ClearITPendingBit(USART2,USART_IT_RXNE);
+        if(DMA_GetITStatus(DMA1_IT_TC1)){
+                gasFlag = (ADC_Value[0] > GASMAX) ? 1: 0;
+                DMA_ClearITPendingBit(DMA1_IT_GL1);
         }
 }
 
@@ -391,95 +237,70 @@ void ControlPWM(int PWM) {
         TIM_OC3Init(TIM3, &TIM_OCInitStructure);
 }
 
-void SetIntruderAlarm()
-{
-        GPIO_SetBits(GPIOC, GPIO_Pin_9);
-}
-
-void ResetIntruderAlarm()
-{
-        GPIO_ResetBits(GPIOC, GPIO_Pin_9);
-}
-
 void SetFireAlarm()
 {
         GPIO_SetBits(GPIOC, GPIO_Pin_8);
         GPIO_SetBits(GPIOC, GPIO_Pin_9);
-        ControlPWM(2000);
+        ControlPWM(1000);
 }
 
 void ResetFireAlarm()
 {
         GPIO_ResetBits(GPIOC, GPIO_Pin_8);
         GPIO_ResetBits(GPIOC, GPIO_Pin_9);
-        ControlPWM(1000);
+        
+        ControlPWM(2000);
+}
+
+char GetLCDNumber(uint16_t x, uint16_t y)
+{
+        char keypad[4][3] = {
+                        { '1', '2', '3' },
+                        { '4', '5', '6' },
+                        { '7', '8', '9'},
+                        { '*', '0', '#' },
+        };
+  
+        // 2차원 배열 - x / 80 + 1, y / 80 + 1로 처리
+        char result = 'a';
+        if(x >= 999 || y >= 999) {
+                result = 'a';
+        }
+        else{
+                result = keypad[x / (80+1)][y / (80+1)];
+        }
+
+        return result;
+}
+
+void Delay(void) {
+	int i;
+	for (i = 0; i < 1000000; i++) {}
 }
 
 int main(void)
 {
-  	SystemInit();
+        SystemInit();
         RCCInit();
-
-        LCD_Init();
-	Touch_Configuration();
-	Touch_Adjust();
-	LCD_Clear(WHITE);
-
+        
         GpioInit();
         EXTI_Configure();
         DMA_Configure();
         ADC_Configure();
         TIM_Configure();
-        USART1_Init();
-        USART2_Init();
         NVIC_Configure();
-        
-        // GPIO_ResetBits(GPIOC, GPIO_Pin_8);
-        // GPIO_ResetBits(GPIOC, GPIO_Pin_9);
-        
-		       
-        
-        // LCD_DrawLine(80, 0, 80, 320);
-        // LCD_DrawLine(160, 0, 160, 320);
-        // LCD_DrawLine(0, 80, 240, 80);
-        // LCD_DrawLine(0, 160, 240, 160);
-        // LCD_DrawLine(0, 240, 240, 240);
-        
-	// for(int i = 1; i <=3; i++) {
-        //     for(int j = 3*i-2; j <= 3*i; j++) {
-        //         uint16_t x = 37 + ((j-1)%3) * 80;
-        //         uint16_t y = 34 + ((i-1)%3) * 80;
-        //         LCD_ShowNum(x, y, j, 1, BLACK, WHITE);
-        //     }
-        // }
-        
-        // LCD_ShowString(37, 274, "*", BLACK, WHITE);
-        // LCD_ShowString(117, 274, "0", BLACK, WHITE);
-        // LCD_ShowString(197, 274, "#", BLACK, WHITE);
+         
+        GPIO_ResetBits(GPIOC, GPIO_Pin_8);
+        GPIO_ResetBits(GPIOC, GPIO_Pin_9);
+
         while(1) {
-                float voltage = (ADC_Value[0] * 5.0) / 1024.0;
-                float temp = (voltage - 0.5) * 100 ;
-                LCD_ShowNum(130, 100, ADC_Value[0] , 4, BLACK, WHITE);
-                LCD_ShowNum(130, 120, (int)temp, 4, BLACK, WHITE);
-                LCD_ShowNum(130, 140, ADC_Value[1], 4, BLACK, WHITE);
-                
+                if(gasFlag) {
+                        SetFireAlarm();
+                }
+                else {
+                        ResetFireAlarm();
+                }
 
-                // if(ADC_Value[1] > 150)
-                // {
-                //         USART_SendData(USART2, (uint16_t)1);
-                //         SetFireAlarm();
-                // }
-
-                // if(btnFlag && motionFlag)
-                // {
-                //         USART_SendData(USART2, (uint16_t)2);
-                //         SetIntruderAlarm();
-                // }
-                // // 240 * 320
-                // Touch_GetXY(&x, &y, 1);
-                // Convert_Pos(x, y, &x, &y);
-
-                // LCD_ShowNum(130, 120, x, 3, BLACK, WHITE);
-                // LCD_ShowNum(130, 140, y, 3, BLACK, WHITE);
-	}
+                Delay();
+        }
 }
