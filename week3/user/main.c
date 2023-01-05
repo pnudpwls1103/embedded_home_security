@@ -9,19 +9,18 @@
 #include "touch.h"
 
 #define TEMPMAX 1000
-#define GASMAX  800
+#define GASMAX  00
 
 volatile uint16_t ADC_Value[1];
 
 volatile int btnFlag = 0;
 volatile int gasFlag = 0;
+volatile int usartFlag = 0;
 
-char password[] = {'1', '2', '3', '4'};
-
-
-volatile int idx = 0;
-volatile int wrongflag = 0;
-volatile int wrongcnt = 0;
+// char password[] = {'1', '2', '3', '4'};
+// volatile int idx = 0;
+// volatile int wrongflag = 0;
+// volatile int wrongcnt = 0;
 
 void RCCInit(void);
 void GpioInit(void);
@@ -30,7 +29,11 @@ void DMA_Configure(void);
 void ADC_Configure(void);
 void NVIC_Configure(void);
 void TIM_Configure(void);
+void USART1_Init(void);
+void USRAT2_Init(void);
 
+void USART1_IRQHandler(void);
+void USART2_IRQHandler(void);
 void EXTI15_10_IRQHandler(void);
 void DMA1_Channel1_IRQHandler(void);
 
@@ -59,6 +62,17 @@ void RCCInit(void)
         
         // TIMER
         RCC_APB1PeriphClockCmd(RCC_APB1ENR_TIM3EN, ENABLE);
+
+        // UART TX/RX
+        RCC_APB2PeriphClockCmd(RCC_APB2ENR_IOPAEN, ENABLE);
+        
+        // USART1
+        RCC_APB2PeriphClockCmd(RCC_APB2ENR_USART1EN, ENABLE);
+
+        // UART2
+        RCC_APB1PeriphClockCmd(RCC_APB1ENR_USART2EN, ENABLE);
+        RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
+
 }
 
 
@@ -89,6 +103,20 @@ void GpioInit(void)
         GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
         GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
         GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+        // TX1(PA9) / TX2(PA2)
+        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9 | GPIO_Pin_2;
+        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+        GPIO_Init(GPIOA, &GPIO_InitStructure);
+        
+        // RX1(PA10) / RX2(A3)
+        GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10 | GPIO_Pin_3;
+        GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+        GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+        GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+
 }
 
 void EXTI_Configure(void)
@@ -182,6 +210,23 @@ void NVIC_Configure(void)
         NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1;
         NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
         NVIC_Init(&NVIC_InitStructure);
+        
+        // UART1
+        NVIC_EnableIRQ(USART1_IRQn);
+        NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
+        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
+        NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1;
+        NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+        NVIC_Init(&NVIC_InitStructure);
+
+        // UART2
+        NVIC_EnableIRQ(USART2_IRQn);
+        NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
+        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0x1;
+        NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0x1;
+        NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+        NVIC_Init(&NVIC_InitStructure);
+
 }
 
 void TIM_Configure(void)
@@ -205,6 +250,69 @@ void TIM_Configure(void)
         TIM_OC3PreloadConfig(TIM3, TIM_OCPreload_Disable);
         TIM_ARRPreloadConfig(TIM3, ENABLE);
         TIM_Cmd(TIM3, ENABLE);
+}
+
+void USART1_Init(void)
+{
+        USART_InitTypeDef USART1_InitStructure;
+
+        USART_Cmd(USART1, ENABLE);
+        
+        USART1_InitStructure.USART_WordLength = USART_WordLength_8b;
+        USART1_InitStructure.USART_StopBits = USART_StopBits_1;
+        USART1_InitStructure.USART_Parity = USART_Parity_No;
+        USART1_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+        USART1_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+        USART1_InitStructure.USART_BaudRate = 9600;
+        USART_Init(USART1, &USART1_InitStructure);
+   
+        USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+}
+
+void USART2_Init(void)
+{
+        USART_InitTypeDef USART2_InitStructure;
+
+        USART_Cmd(USART2, ENABLE);
+        
+        USART2_InitStructure.USART_WordLength = USART_WordLength_8b;
+        USART2_InitStructure.USART_StopBits = USART_StopBits_1;
+        USART2_InitStructure.USART_Parity = USART_Parity_No;
+        USART2_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+        USART2_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+        USART2_InitStructure.USART_BaudRate = 9600;
+        USART_Init(USART2, &USART2_InitStructure);
+   
+        USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
+   
+}
+
+void USART1_IRQHandler()
+{
+        uint16_t word;
+        if(USART_GetITStatus(USART1,USART_IT_RXNE)!=RESET){
+            word = USART_ReceiveData(USART1);
+            USART_SendData(USART2, word);
+            USART_ClearITPendingBit(USART1,USART_IT_RXNE);
+        }
+}
+
+void USART2_IRQHandler(void)
+{
+        uint16_t word;
+        if(USART_GetITStatus(USART2,USART_IT_RXNE)!=RESET){
+                word = USART_ReceiveData(USART2);
+                USART_SendData(USART1, word);
+                if(word == (uint16_t)'1') {
+                        usartFlag = 0;
+                }
+                else {
+                        
+                        usartFlag = 1;
+                }
+            
+            USART_ClearITPendingBit(USART2,USART_IT_RXNE);
+        }
 }
 
 void EXTI15_10_IRQHandler() {
@@ -275,7 +383,7 @@ char GetLCDNumber(uint16_t x, uint16_t y)
 
 void Delay(void) {
 	int i;
-	for (i = 0; i < 1000000; i++) {}
+	for (i = 0; i < 500000; i++) {}
 }
 
 int main(void)
@@ -288,19 +396,25 @@ int main(void)
         DMA_Configure();
         ADC_Configure();
         TIM_Configure();
+        USART1_Init();
+        USART2_Init();
         NVIC_Configure();
          
         GPIO_ResetBits(GPIOC, GPIO_Pin_8);
         GPIO_ResetBits(GPIOC, GPIO_Pin_9);
 
         while(1) {
-                if(gasFlag) {
-                        SetFireAlarm();
-                }
-                else {
+                if(usartFlag) {
                         ResetFireAlarm();
+                } else {
+                        if(btnFlag || gasFlag) {
+                                SetFireAlarm();
+                        }
+                        else {
+                                ResetFireAlarm();
+                        }
                 }
-
+                
                 Delay();
         }
 }
